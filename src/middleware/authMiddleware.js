@@ -1,21 +1,15 @@
 // middleware/authMiddleware.js
 
 /**
- * Authentication middleware. Checks if the user is logged in via session or cookie.
+ * Authentication middleware. Checks if the user is logged in via session.
  * If not, redirects to the login page.
  */
 export function authenticate(req, res, next) {
-  if (req.session.loggedIn) {
-    return next();
-  }
-  // If session is not active, check for cookie and restore session
-  if (req.cookies.loggedIn && req.cookies.loggedInUser) {
-    req.session.loggedIn = true;
-    req.session.user = req.cookies.loggedInUser;
+  if (req.session && req.session.loggedIn) {
     return next();
   }
   // User is not logged in, redirect to the login page
-  res.redirect("/");
+  res.redirect("/login");
 }
 
 /**
@@ -23,7 +17,7 @@ export function authenticate(req, res, next) {
  * If logged in, redirects to the upload page.
  */
 export function checkLoggedIn(req, res, next) {
-  if (req.session.loggedIn) {
+  if (req.session && req.session.loggedIn) {
     return res.redirect("/upload");
   }
   next();

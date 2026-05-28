@@ -1,52 +1,74 @@
-const loginForm = document.getElementById('loginForm');
-const errorElement = document.getElementById('Error');
+// views/scripts/login.js
 
-loginForm.addEventListener('submit', async (event) => {
-    event.preventDefault(); // Prevent the default form submission behavior
+document.addEventListener('DOMContentLoaded', () => {
+    const loginForm = document.getElementById('loginForm');
+    const errorBox = document.getElementById('errorBox');
 
-    // Get form data
-    const formData = new FormData(loginForm);
+    if (loginForm) {
+        loginForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
 
-    // Make a POST request to your server
-    try {
-        const response = await fetch('/login', {
-            method: 'POST',
-            body: new URLSearchParams(formData) // It's often better to send as x-www-form-urlencoded
+            // Clear previous errors
+            if (errorBox) {
+                errorBox.style.display = 'none';
+                errorBox.textContent = '';
+            }
+
+            const formData = new FormData(loginForm);
+            const params = new URLSearchParams(formData);
+
+            try {
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: params.toString()
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.redirectUrl) {
+                    window.location.href = data.redirectUrl;
+                } else {
+                    const errorMsg = data.error || 'Invalid username or password.';
+                    if (errorBox) {
+                        errorBox.textContent = errorMsg;
+                        errorBox.style.display = 'block';
+                        errorBox.classList.add('animate-shake');
+                        setTimeout(() => errorBox.classList.remove('animate-shake'), 500);
+                    } else {
+                        alert(errorMsg);
+                    }
+                }
+            } catch (error) {
+                console.error('Login fetch error:', error);
+                if (errorBox) {
+                    errorBox.textContent = 'A connection error occurred. Please try again.';
+                    errorBox.style.display = 'block';
+                } else {
+                    alert('A connection error occurred.');
+                }
+            }
         });
-
-        if (response.ok) {
-            // *** MODIFIED PART ***
-            // Parse the JSON response from the server
-            const data = await response.json();
-            // Redirect the user to the URL provided by the backend
-            window.location.href = data.redirectUrl;
-        } else {
-            // Form submission failed, display the error message from the response
-            const errorData = await response.text(); // Assuming error is rendered HTML
-            // This part might need adjustment if your error response is also JSON
-            document.body.innerHTML = errorData; // If you're rendering a full error page
-            // Or if you just want to display a message:
-            // const errorJson = await response.json();
-            // errorElement.textContent = errorJson.errorMessage;
-            // errorElement.style.display = 'block';
-        }
-    } catch (error) {
-        // Handle any network or other errors
-        console.error(error);
-        errorElement.textContent = 'An error occurred.';
-        errorElement.style.display = 'block';
     }
-});
 
-const passwordInput = document.getElementById('password');
-const passwordToggle = document.getElementById('passwordToggle');
+    // Toggle password visibility
+    const passwordInput = document.getElementById('password');
+    const passwordToggle = document.getElementById('passwordToggle');
 
-passwordToggle.addEventListener('click', () => {
-    if (passwordInput.type === 'password') {
-        passwordInput.type = 'text';
-        passwordToggle.innerHTML = '<i class="bi bi-eye-slash-fill"></i>';
-    } else {
-        passwordInput.type = 'password';
-        passwordToggle.innerHTML = '<i class="bi bi-eye-fill"></i>';
+    if (passwordToggle && passwordInput) {
+        passwordToggle.addEventListener('click', () => {
+            const icon = passwordToggle.querySelector('i');
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                icon.classList.remove('bi-eye-slash');
+                icon.classList.add('bi-eye');
+            } else {
+                passwordInput.type = 'password';
+                icon.classList.remove('bi-eye');
+                icon.classList.add('bi-eye-slash');
+            }
+        });
     }
 });

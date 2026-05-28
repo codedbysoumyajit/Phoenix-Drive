@@ -1,23 +1,37 @@
-/* Color Palette (Material You Dark Inspired) - Consistent */
+/* Premium CSS Design System - Auth Section */
 :root {
-    --md-sys-color-primary: #BB86FC;
-    --md-sys-color-on-primary: #000000;
-    --md-sys-color-primary-container: #8C4DDB;
-    --md-sys-color-on-primary-container: #FFFFFF;
-    --md-sys-color-secondary: #03DAC6;
-    --md-sys-color-background: #121212;
-    --md-sys-color-on-background: #E0E0E0;
-    --md-sys-color-surface: #1E1E1E;
-    --md-sys-color-on-surface: #E0E0E0;
-    --md-sys-color-surface-variant: #2C2C2C;
-    --md-sys-color-on-surface-variant: #BBBBBB;
-    --md-sys-color-outline: #4A4A4A;
-    --md-sys-color-error: #CF6679;
-    --md-sys-color-shadow: #000000;
+    --bg-dark: #070a13;
+    --bg-card: rgba(13, 20, 38, 0.45);
+    --border-card: rgba(255, 255, 255, 0.08);
+    --primary: #6366f1;
+    --primary-glow: rgba(99, 102, 241, 0.35);
+    --secondary: #06b6d4;
+    --text-main: #f3f4f6;
+    --text-muted: #9ca3af;
+    --input-bg: rgba(7, 10, 19, 0.6);
+    --error-bg: rgba(239, 68, 68, 0.15);
+    --error-border: rgba(239, 68, 68, 0.35);
+    --error-text: #fca5a5;
+    --shadow-main: rgba(0, 0, 0, 0.5);
 }
 
-/* --- NEW: Aurora Background Effect --- */
-body::before {
+/* Background Aurora Pattern */
+body.auth-body {
+    background-color: var(--bg-dark);
+    font-family: 'Outfit', sans-serif;
+    color: var(--text-main);
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+    box-sizing: border-box;
+    overflow-x: hidden;
+    position: relative;
+}
+
+body.auth-body::before {
     content: '';
     position: fixed;
     top: 0;
@@ -25,197 +39,271 @@ body::before {
     width: 100%;
     height: 100vh;
     background: 
-        radial-gradient(circle at 15% 25%, rgba(187, 134, 252, 0.2), transparent 40%),
-        radial-gradient(circle at 85% 75%, rgba(3, 218, 198, 0.15), transparent 40%);
+        radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.12), transparent 45%),
+        radial-gradient(circle at 90% 80%, rgba(6, 182, 212, 0.1), transparent 45%);
     filter: blur(80px);
     z-index: -1;
-    animation: pulse-aurora 15s infinite ease-in-out;
+    pointer-events: none;
+    animation: animateBg 20s infinite alternate ease-in-out;
 }
 
-@keyframes pulse-aurora {
-    0%, 100% { transform: scale(1); opacity: 1; }
-    50% { transform: scale(1.1); opacity: 0.8; }
+@keyframes animateBg {
+    0% { transform: scale(1) translate(0, 0); }
+    100% { transform: scale(1.1) translate(2%, 2%); }
 }
 
-body {
-    background-color: var(--md-sys-color-background);
-    font-family: 'Roboto Flex', sans-serif;
-    color: var(--md-sys-color-on-background);
-    margin: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    padding: 16px;
+.auth-container {
+    width: 100%;
+    max-width: 440px;
+    z-index: 10;
+}
+
+/* Premium Glassmorphic Card */
+.glass-card {
+    background: var(--bg-card);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--border-card);
+    border-radius: 24px;
+    box-shadow: 0 20px 50px var(--shadow-main), 
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    padding: 40px 30px;
     box-sizing: border-box;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+.glass-card:hover {
+    border-color: rgba(99, 102, 241, 0.25);
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6), 
+                0 0 30px rgba(99, 102, 241, 0.15);
+}
+
+/* Brand Header */
+.brand-header {
     text-align: center;
-    width: 100%;
-    max-width: 420px;
 }
 
-.logo {
-    max-width: 120px;
+.logo-img {
+    max-width: 90px;
     height: auto;
-    margin-bottom: 20px;
+    margin-bottom: 16px;
+    filter: drop-shadow(0 0 15px var(--primary-glow));
 }
 
-h1 {
-    font-size: clamp(1.8rem, 5vw, 2.2rem);
-    margin: 0 0 24px 0;
-    font-family: "Ubuntu", sans-serif;
+.logo-img.animate-float {
+    animation: float 4s infinite ease-in-out;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+}
+
+.brand-title {
+    font-size: 2.2rem;
     font-weight: 700;
-    color: var(--md-sys-color-on-background);
+    margin: 0;
+    background: linear-gradient(135deg, #ffffff 30%, #a5b4fc 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -0.5px;
 }
 
-/* --- FANCY: Modern Glassmorphism Container --- */
-.form-container {
-    width: 100%;
-    background-color: rgba(30, 30, 30, 0.65);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 28px;
-    box-shadow: 0 8px 32px rgba(var(--md-sys-color-shadow), 0.3);
-    padding: clamp(24px, 5vw, 36px);
-    box-sizing: border-box;
+.brand-subtitle {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    margin-top: 6px;
+    font-weight: 400;
+}
+
+/* Inputs styling */
+.auth-form {
     display: flex;
     flex-direction: column;
-    gap: 24px;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    gap: 18px;
 }
 
-.form-container:hover {
-    transform: translateY(-8px) scale(1.02);
-    box-shadow: 0 16px 40px rgba(var(--md-sys-color-shadow), 0.35), 
-                0 0 20px rgba(187, 134, 252, 0.1);
-}
-
-#loginForm {
-    display: contents;
-}
-
-/* --- POLISHED: Input Fields --- */
-.input-group {
+.input-field-group {
     position: relative;
-    width: 100%;
-    display: flex; /* Use flex for alignment */
+    display: flex;
     align-items: center;
-    background-color: rgba(0, 0, 0, 0.2);
-    border: 1px solid var(--md-sys-color-outline);
-    border-radius: 16px;
+    background: var(--input-bg);
+    border: 1px solid var(--border-card);
+    border-radius: 14px;
     transition: all 0.3s ease;
 }
 
-.input-group:focus-within {
-    border-color: var(--md-sys-color-primary);
-    box-shadow: 0 0 0 3px rgba(187, 134, 252, 0.2);
-    background-color: rgba(0, 0, 0, 0.3);
+.input-field-group:focus-within {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
+    background: rgba(7, 10, 19, 0.85);
 }
 
-.form-control {
-    flex-grow: 1; /* Take up available space */
-    padding: 16px;
-    border: none;
-    background-color: transparent;
-    color: var(--md-sys-color-on-surface);
-    font-family: 'Roboto Flex', sans-serif;
-    font-size: 1rem;
-    box-shadow: none;
+.border-warning-focus:focus-within {
+    border-color: #f59e0b !important;
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.25) !important;
 }
 
-.form-control::placeholder {
-    color: var(--md-sys-color-on-surface-variant);
-    opacity: 0.8;
-}
-
-.form-control:focus {
-    outline: none;
-    box-shadow: none;
-}
-
-.btn-icon-toggle {
-    padding: 16px;
-    background-color: transparent;
-    border: none;
-    color: var(--md-sys-color-on-surface-variant);
-    cursor: pointer;
+.input-icon {
+    padding-left: 16px;
+    color: var(--text-muted);
+    font-size: 1.1rem;
+    pointer-events: none;
     transition: color 0.3s ease;
 }
 
-.btn-icon-toggle:hover {
-    color: var(--md-sys-color-on-surface);
+.input-field-group:focus-within .input-icon {
+    color: var(--primary);
 }
 
-.input-group:focus-within .btn-icon-toggle {
-    color: var(--md-sys-color-primary);
-}
-
-
-/* --- FANCY: Modernized Button --- */
-.btn-primary-material {
+.custom-input {
     width: 100%;
-    padding: 16px 24px;
-    background-color: var(--md-sys-color-primary);
-    color: var(--md-sys-color-on-primary);
+    padding: 15px 16px 15px 10px;
+    background: transparent;
     border: none;
-    border-radius: 100px;
+    outline: none;
+    color: var(--text-main);
+    font-family: inherit;
+    font-size: 0.95rem;
+}
+
+.custom-input::placeholder {
+    color: var(--text-muted);
+    opacity: 0.65;
+}
+
+.password-toggle-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    padding: 0 16px;
+    cursor: pointer;
     font-size: 1.1rem;
-    font-weight: 600;
+    transition: color 0.3s ease;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 12px;
+    height: 100%;
+}
+
+.password-toggle-btn:hover {
+    color: var(--text-main);
+}
+
+.input-field-group:focus-within .password-toggle-btn {
+    color: var(--primary);
+}
+
+/* Premium Buttons */
+.btn-premium {
+    padding: 15px 24px;
+    background: linear-gradient(135deg, var(--primary) 0%, #4f46e5 100%);
+    color: #ffffff;
+    border: none;
+    border-radius: 14px;
+    font-size: 1rem;
+    font-weight: 600;
     cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(var(--md-sys-color-shadow), 0.2);
-    margin-top: 8px; /* Add some space above the button */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 4px 14px rgba(99, 102, 241, 0.2);
 }
 
-.btn-primary-material:hover {
-    background-color: var(--md-sys-color-primary-container);
-    box-shadow: 0 6px 20px rgba(var(--md-sys-color-shadow), 0.3);
-    transform: translateY(-3px);
+.btn-premium:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+    background: linear-gradient(135deg, #818cf8 0%, var(--primary) 100%);
 }
 
-.btn-primary-material:active {
-    transform: translateY(0);
-    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+.btn-glow {
+    position: relative;
+    overflow: hidden;
 }
 
-/* Error Message */
-.error-message {
-    color: var(--md-sys-color-error);
-    margin-top: 20px;
-    font-size: 0.95rem;
+.btn-glow::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 60%);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.btn-glow:hover::after {
+    opacity: 1;
+}
+
+/* Error feedback box */
+.error-box {
+    background: var(--error-bg);
+    border: 1px solid var(--error-border);
+    color: var(--error-text);
+    padding: 14px 18px;
+    border-radius: 14px;
+    font-size: 0.9rem;
     font-weight: 500;
-    background-color: rgba(207, 102, 121, 0.1);
-    border: 1px solid rgba(207, 102, 121, 0.5);
-    padding: 12px;
-    border-radius: 16px;
-    width: 100%;
-    max-width: 420px;
-    box-sizing: border-box;
-    display: none; /* Hidden by default */
+    line-height: 1.4;
+    text-align: center;
+    box-shadow: 0 4px 10px rgba(239, 68, 68, 0.1);
 }
 
-/* --- Responsive Adjustments --- */
+/* Shake Animation */
+.animate-shake {
+    animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+    20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
+/* Auth Footer linkings */
+.auth-footer {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.gradient-link {
+    color: #a5b4fc;
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.3s ease;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    display: inline-block;
+}
+
+.gradient-link:hover {
+    filter: brightness(1.2);
+}
+
+/* Responsive adjustments */
 @media (max-width: 480px) {
-    .container, .error-message {
-        max-width: 100%;
+    .glass-card {
+        padding: 30px 20px;
     }
+    
+    .brand-title {
+        font-size: 1.8rem;
+    }
+}
 
-    .form-control, .btn-icon-toggle {
-        padding: 14px;
-        font-size: 0.95rem;
-    }
+/* Spinner Utilities */
+.spinner-spin {
+    animation: spin 1.2s linear infinite;
+    display: inline-block;
+}
 
-    .btn-primary-material {
-        padding: 14px;
-        font-size: 1rem;
-    }
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }

@@ -1,203 +1,101 @@
-// Helper function to get CSS variable values
-function varCssValue(varName) {
-    return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
-}
+// views/scripts/upload.js
 
 // Helper function to format bytes for display
 function formatBytes(bytes, decimals = 2) {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
     const dm = decimals < 0 ? 0 : decimals;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
 }
 
-// Function to attach handlers for dynamically loaded content (share/download buttons)
-// This function needs to be exported if it's called from other modules/dynamic content.
-export function attachLinkHandlers() {
-    const shareBtn = document.getElementById('shareButton');
-    if (shareBtn) {
-        shareBtn.onclick = () => {
-            const link = shareBtn.getAttribute('data-download-link');
-            shareOrCopyLink(link, shareBtn, "<i class='bi bi-share-fill'></i> Share Download Link");
-        };
+// Helper to show modern application toasts
+function showToast(message, type = 'success') {
+    const toastEl = document.getElementById('appToast');
+    const toastText = document.getElementById('toastText');
+    const toastIcon = toastEl.querySelector('.toast-body i');
+    
+    if (toastText) {
+        toastText.textContent = message;
     }
-
-    const viewBtn = document.getElementById('viewButton');
-    if (viewBtn) {
-        viewBtn.onclick = () => {
-            const link = viewBtn.getAttribute('data-view-link');
-            shareOrCopyLink(link, viewBtn, "<i class='bi bi-eye-fill'></i> View Link");
-        };
+    
+    // Set icons
+    if (toastIcon) {
+        toastIcon.className = '';
+        if (type === 'success') {
+            toastIcon.className = 'bi bi-check-circle-fill me-2 text-success-bright';
+        } else if (type === 'error') {
+            toastIcon.className = 'bi bi-exclamation-octagon-fill me-2 text-danger';
+        } else {
+            toastIcon.className = 'bi bi-info-circle-fill me-2 text-primary';
+        }
     }
-
-    const cdnBtn = document.getElementById('cdnButton');
-    if (cdnBtn) {
-        cdnBtn.onclick = () => {
-            const link = cdnBtn.getAttribute('data-cdn-link');
-            shareOrCopyLink(link, cdnBtn, "<i class='bi bi-code-slash'></i> CDN Link");
-        };
-    }
+    
+    const bootstrapToast = new bootstrap.Toast(toastEl);
+    bootstrapToast.show();
 }
 
-// Function to handle sharing or copying link
-// This function needs to be exported if it's called from other modules.
-export function shareOrCopyLink(link, button, defaultHtml) {
-    if (!link) {
-        alert("Link is missing!");
-        return;
-    }
-
-    if (navigator.canShare && navigator.canShare({ url: link })) {
-        navigator.share({
-            url: link,
-            title: 'Phoenix XShare',
-        }).catch((error) => {
-            console.error('Share failed:', error);
-        });
-    } else {
-        const textArea = document.createElement('textarea');
-        textArea.value = link;
-        document.body.appendChild(textArea);
-        textArea.select();
+// Function to copy text to clipboard
+function copyToClipboard(text) {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    document.body.appendChild(textArea);
+    textArea.select();
+    try {
         document.execCommand('copy');
-        document.body.removeChild(textArea);
-
-        button.innerHTML = "<i class='bi bi-clipboard-check-fill'></i> Copied!";
-        setTimeout(() => {
-            button.innerHTML = defaultHtml;
-        }, 2000);
+        showToast('Link copied to clipboard!');
+    } catch (err) {
+        console.error('Copy failed:', err);
+        showToast('Failed to copy link.', 'error');
     }
+    document.body.removeChild(textArea);
 }
 
-
-// Main logic for the upload page
+// Main logic
 document.addEventListener('DOMContentLoaded', () => {
-    const form = document.getElementById('uploadForm');
+    const uploadForm = document.getElementById('uploadForm');
     const fileInput = document.getElementById('fileInput');
     const fileSelectionArea = document.getElementById('fileSelectionArea');
-    const fileNameDisplay = document.getElementById('fileNameDisplay');
-    const dragDropText = fileSelectionArea.querySelector('.drag-drop-text');
-
+    const uploadTriggerButton = document.getElementById('uploadTriggerButton');
+    
+    const queueContainer = document.getElementById('queueContainer');
+    const queueList = document.getElementById('queueList');
+    
     const progressBarContainer = document.getElementById('progressBarContainer');
     const progressBar = document.getElementById('progressBar');
     const progressMessage = document.getElementById('progressMessage');
+    const progressPercentage = document.getElementById('progressPercentage');
     const uploadStatus = document.getElementById('uploadStatus');
-    const mainContainer = document.getElementById('mainContainer'); // Assuming this is the main content wrapper
+    
+    const successPanel = document.getElementById('successPanel');
+    const successFilesList = document.getElementById('successFilesList');
+    const closeSuccessBtn = document.getElementById('closeSuccessBtn');
 
-    // Initial state: hide progress bar and file name display
-    progressBarContainer.classList.add('hidden');
-    fileNameDisplay.classList.add('hidden');
+    // Modals
+    const deleteModal = document.getElementById('deleteModal');
+    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+    const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
+    const deleteFileNameDisplay = document.getElementById('deleteFileNameDisplay');
 
-    // Update file name display when a file is chosen
+    const qrModal = document.getElementById('qrModal');
+    const modalQrCodeImg = document.getElementById('modalQrCodeImg');
+    const closeQrModalBtn = document.getElementById('closeQrModalBtn');
+
+    // Active upload tracking
+    let queuedFiles = [];
+    let activeDeleteFileName = null;
+
+    // --- UPLOAD DROPZONE LOGIC ---
+    
+    // File change handler
     fileInput.addEventListener('change', () => {
-        if (fileInput.files.length > 0) {
-            fileNameDisplay.textContent = fileInput.files[0].name;
-            fileNameDisplay.classList.remove('hidden'); // Show file name
-            dragDropText.classList.add('hidden'); // Hide "Drag & Drop" text
-        } else {
-            fileNameDisplay.textContent = "No file chosen";
-            fileNameDisplay.classList.add('hidden'); // Hide file name
-            dragDropText.classList.remove('hidden'); // Show "Drag & Drop" text
-        }
+        handleFileSelection(fileInput.files);
     });
 
-    form.addEventListener('submit', (event) => {
-        event.preventDefault();
-
-        if (fileInput.files.length === 0) {
-            alert("Please select a file to upload.");
-            return;
-        }
-
-        // --- Show Progress Bar, Hide Form ---
-        form.classList.add('hidden'); // Hide the upload form
-        progressBarContainer.classList.remove('hidden'); // Show the progress bar container
-
-        // Reset progress bar state
-        progressBar.style.width = '0%';
-        progressBar.style.backgroundColor = varCssValue('--md-sys-color-primary'); // Reset color in case of previous error
-        progressMessage.textContent = 'Preparing upload...';
-        uploadStatus.textContent = ''; // Clear previous status
-
-        const formData = new FormData();
-        formData.append('file', fileInput.files[0]);
-
-        // Using XMLHttpRequest for progress tracking
-        const xhr = new XMLHttpRequest();
-
-        xhr.open('POST', '/upload', true); // 'true' for asynchronous
-
-        xhr.upload.onprogress = (event) => {
-            if (event.lengthComputable) {
-                const percentComplete = (event.loaded / event.total) * 100;
-                progressBar.style.width = percentComplete + '%';
-                progressMessage.textContent = `Uploading: ${Math.round(percentComplete)}%`;
-                uploadStatus.textContent = `Uploaded ${formatBytes(event.loaded)} of ${formatBytes(event.total)}`;
-            }
-        };
-
-        xhr.onload = () => {
-            if (xhr.status >= 200 && xhr.status < 300) { // Check for success status codes
-                progressBar.style.width = '100%';
-                progressMessage.textContent = 'Upload Complete!';
-                uploadStatus.textContent = 'File uploaded successfully.';
-
-                // Replace the entire main container's content with the server response
-                // This assumes your server responds with the HTML for the "uploaded" page.
-                if (mainContainer) {
-                    mainContainer.innerHTML = xhr.responseText;
-                    // Important: Since mainContainer's content is replaced,
-                    // event listeners (like for share/view/cdn buttons) need to be reattached.
-                    // This attachLinkHandlers is for those new elements.
-                    attachLinkHandlers();
-                } else {
-                    console.error("mainContainer not found to update content.");
-                    // Fallback, if mainContainer replacement isn't the desired behavior.
-                    // You might just show success message and hide progress bar here.
-                }
-
-            } else {
-                // Handle server-side errors (e.g., 500, 404)
-                progressMessage.textContent = 'Upload Failed!';
-                uploadStatus.textContent = `Error: ${xhr.status} - ${xhr.statusText || 'Upload failed'}`;
-                progressBar.style.backgroundColor = varCssValue('--md-sys-color-error'); // Red for error
-                setTimeout(() => {
-                    progressBarContainer.classList.add('hidden');
-                    form.classList.remove('hidden');
-                    // Reset styling on error
-                    progressBar.style.backgroundColor = varCssValue('--md-sys-color-primary');
-                    fileNameDisplay.textContent = "No file chosen";
-                    fileNameDisplay.classList.add('hidden'); // Hide filename display
-                    dragDropText.classList.remove('hidden'); // Show drag drop text
-                    fileInput.value = ''; // Clear file input
-                }, 3000); // Show error for 3 seconds, then revert
-            }
-        };
-
-        xhr.onerror = () => {
-            // Handle network errors (e.g., no internet connection)
-            progressMessage.textContent = 'Network Error!';
-            uploadStatus.textContent = 'Please check your internet connection.';
-            progressBar.style.backgroundColor = varCssValue('--md-sys-color-error'); // Red for error
-            setTimeout(() => {
-                progressBarContainer.classList.add('hidden');
-                form.classList.remove('hidden');
-                progressBar.style.backgroundColor = varCssValue('--md-sys-color-primary');
-                fileNameDisplay.textContent = "No file chosen";
-                fileNameDisplay.classList.add('hidden'); // Hide filename display
-                dragDropText.classList.remove('hidden'); // Show drag drop text
-                fileInput.value = '';
-            }, 3000);
-        };
-
-        xhr.send(formData);
-    });
-
-    // Drag & Drop functionality for the new fileSelectionArea
-    fileSelectionArea.addEventListener('dragover', (event) => {
-        event.preventDefault();
+    // Drag & Drop event bindings
+    fileSelectionArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
         fileSelectionArea.classList.add('dragging');
     });
 
@@ -205,81 +103,373 @@ document.addEventListener('DOMContentLoaded', () => {
         fileSelectionArea.classList.remove('dragging');
     });
 
-    fileSelectionArea.addEventListener('drop', (event) => {
-        event.preventDefault();
-        fileSelectionArea.classList.remove('dragging');
-        if (event.dataTransfer.files.length > 0) {
-            fileInput.files = event.dataTransfer.files;
-            fileNameDisplay.textContent = fileInput.files[0].name; // Update display
-            fileNameDisplay.classList.remove('hidden'); // Show filename
-            dragDropText.classList.add('hidden'); // Hide drag drop text
-        }
-    });
-
-    // Initial attachment of handlers in case dynamic content exists on first load
-    // This assumes the initial page load might already contain elements needing handlers.
-    attachLinkHandlers();
-});
-
-// Add this to your existing upload.js file
-
-document.addEventListener('DOMContentLoaded', () => {
-    // ... your existing code for file uploads ...
-
-    // --- PWA Installation Prompt Logic ---
-    const pwaToast = document.getElementById('pwaInstallToast');
-    const installButton = document.getElementById('pwaInstallButton');
-    const closeButton = document.getElementById('pwaCloseButton');
-    let deferredPrompt;
-
-    // Listen for the browser's install prompt
-    window.addEventListener('beforeinstallprompt', (e) => {
-        // Prevent the mini-infobar from appearing on mobile
+    fileSelectionArea.addEventListener('drop', (e) => {
         e.preventDefault();
-        // Stash the event so it can be triggered later.
-        deferredPrompt = e;
-        
-        // Show our custom install prompt toast
-        if (pwaToast) {
-            pwaToast.classList.add('visible');
-            pwaToast.classList.remove('hidden'); // Ensure it's not display:none
+        fileSelectionArea.classList.remove('dragging');
+        if (e.dataTransfer.files.length > 0) {
+            handleFileSelection(e.dataTransfer.files);
         }
     });
 
-    // Handle the install button click
-    if (installButton) {
-        installButton.addEventListener('click', async () => {
-            // Hide the toast
-            if (pwaToast) pwaToast.classList.remove('visible');
+    function handleFileSelection(files) {
+        // Add new files to our internal queue
+        for (let i = 0; i < files.length; i++) {
+            queuedFiles.push(files[i]);
+        }
+        renderQueue();
+    }
 
-            if (deferredPrompt) {
-                // Show the browser's install prompt
-                deferredPrompt.prompt();
+    function renderQueue() {
+        queueList.innerHTML = '';
+        if (queuedFiles.length === 0) {
+            queueContainer.classList.add('hidden');
+            uploadTriggerButton.classList.add('d-none');
+            return;
+        }
+
+        queueContainer.classList.remove('hidden');
+        uploadTriggerButton.classList.remove('d-none');
+
+        queuedFiles.forEach((file, index) => {
+            const item = document.createElement('div');
+            item.className = 'queue-item animate-float';
+            
+            // File type icon
+            let fileIconClass = 'bi-file-earmark';
+            const ext = file.name.split('.').pop().toLowerCase();
+            if (['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp'].includes(ext)) fileIconClass = 'bi-file-earmark-image';
+            else if (['mp4', 'webm', 'ogg'].includes(ext)) fileIconClass = 'bi-file-earmark-play';
+            else if (['mp3', 'wav', 'flac'].includes(ext)) fileIconClass = 'bi-file-earmark-music';
+            else if (['zip', 'rar', 'tar', 'gz'].includes(ext)) fileIconClass = 'bi-file-earmark-zip';
+            else if (['pdf'].includes(ext)) fileIconClass = 'bi-file-earmark-pdf';
+            
+            item.innerHTML = `
+                <div class="queue-file-info">
+                    <i class="bi ${fileIconClass} text-indigo" style="font-size: 1.15rem;"></i>
+                    <span class="queue-file-name" title="${file.name}">${file.name}</span>
+                    <span class="queue-file-size">(${formatBytes(file.size)})</span>
+                </div>
+                <button type="button" class="btn-remove-queue" data-index="${index}">
+                    <i class="bi bi-x-circle-fill"></i>
+                </button>
+            `;
+            queueList.appendChild(item);
+        });
+
+        // Add remove handlers
+        const removeButtons = queueList.querySelectorAll('.btn-remove-queue');
+        removeButtons.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const idx = parseInt(btn.getAttribute('data-index'));
+                queuedFiles.splice(idx, 1);
+                renderQueue();
+            });
+        });
+    }
+
+    // --- FORM UPLOAD SUBMIT LOGIC ---
+    uploadForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        if (queuedFiles.length === 0) {
+            showToast('Please queue at least one file.', 'error');
+            return;
+        }
+
+        // Hide form inputs and queue, show progress bar
+        fileSelectionArea.style.pointerEvents = 'none';
+        uploadTriggerButton.classList.add('d-none');
+        queueContainer.classList.add('hidden');
+        progressBarContainer.classList.remove('hidden');
+
+        // Reset progress bar state
+        progressBar.style.width = '0%';
+        progressPercentage.textContent = '0%';
+        progressMessage.textContent = `Uploading ${queuedFiles.length} file(s)...`;
+        uploadStatus.textContent = '';
+
+        const formData = new FormData();
+        queuedFiles.forEach(file => {
+            formData.append('file', file);
+        });
+
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', '/upload', true);
+
+        xhr.upload.onprogress = (event) => {
+            if (event.lengthComputable) {
+                const percent = (event.loaded / event.total) * 100;
+                progressBar.style.width = percent + '%';
+                progressPercentage.textContent = `${Math.round(percent)}%`;
+                uploadStatus.textContent = `Uploaded ${formatBytes(event.loaded)} of ${formatBytes(event.total)}`;
+            }
+        };
+
+        xhr.onload = () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+                try {
+                    const result = JSON.parse(xhr.responseText);
+                    if (result.success && result.files) {
+                        progressBarContainer.classList.add('hidden');
+                        renderSuccessPanel(result.files);
+                    } else {
+                        handleUploadError('Invalid response payload.');
+                    }
+                } catch (err) {
+                    console.error('Failed to parse response:', err);
+                    handleUploadError('Upload succeeded but metadata parsing failed.');
+                }
+            } else {
+                handleUploadError(`Upload failed with status code ${xhr.status}`);
+            }
+        };
+
+        xhr.onerror = () => {
+            handleUploadError('Network connection failed during upload.');
+        };
+
+        xhr.send(formData);
+    });
+
+    function handleUploadError(errMsg) {
+        showToast(errMsg, 'error');
+        progressBar.style.width = '100%';
+        progressBar.style.backgroundColor = '#f87171'; // Error color
+        progressMessage.textContent = 'Upload Failed!';
+        progressPercentage.textContent = '';
+        
+        setTimeout(() => {
+            // Restore upload form state
+            progressBarContainer.classList.add('hidden');
+            fileSelectionArea.style.pointerEvents = 'auto';
+            uploadTriggerButton.classList.remove('d-none');
+            progressBar.style.backgroundColor = ''; // Reset
+            renderQueue();
+        }, 3000);
+    }
+
+    function renderSuccessPanel(filesList) {
+        successFilesList.innerHTML = '';
+        successPanel.classList.remove('hidden');
+        fileSelectionArea.classList.add('hidden');
+
+        filesList.forEach(file => {
+            const card = document.createElement('div');
+            card.className = 'success-file-card';
+            card.innerHTML = `
+                <div class="s-file-header">
+                    <span class="s-file-title" title="${file.originalName}"><i class="bi bi-file-earmark-check text-success-bright me-2"></i>${file.originalName}</span>
+                    <span class="s-file-size badge bg-success-glow">${file.fileSize}</span>
+                </div>
+                <div class="s-file-actions-row">
+                    <a href="${file.viewLink}" class="btn-outline-glow btn-small-glow" target="_blank">
+                        <i class="bi bi-eye"></i> Preview
+                    </a>
+                    <button class="btn-outline-glow btn-small-glow btn-copy-link" data-link="${file.downloadLink}">
+                        <i class="bi bi-share"></i> Share Link
+                    </button>
+                    <button class="btn-outline-glow btn-small-glow btn-copy-link" data-link="${file.cdnLink}">
+                        <i class="bi bi-code-slash"></i> CDN Link
+                    </button>
+                    <button class="btn-outline-glow btn-small-glow btn-qr-link" data-qr="${file.qrCodeImage}">
+                        <i class="bi bi-qr-code"></i> QR Code
+                    </button>
+                </div>
+            `;
+            successFilesList.appendChild(card);
+        });
+
+        // Attach event listeners inside success cards
+        successFilesList.querySelectorAll('.btn-copy-link').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const link = btn.getAttribute('data-link');
+                copyToClipboard(link);
                 
-                // Wait for the user to respond to the prompt
-                const { outcome } = await deferredPrompt.userChoice;
-                console.log(`User response to the install prompt: ${outcome}`);
-                
-                // We've used the prompt, and it can't be used again. Clear it.
-                deferredPrompt = null;
+                const oldHtml = btn.innerHTML;
+                btn.innerHTML = '<i class="bi bi-clipboard-check"></i> Copied!';
+                setTimeout(() => {
+                    btn.innerHTML = oldHtml;
+                }, 2000);
+            });
+        });
+
+        successFilesList.querySelectorAll('.btn-qr-link').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const qrBase64 = btn.getAttribute('data-qr');
+                modalQrCodeImg.src = qrBase64;
+                qrModal.classList.remove('hidden');
+            });
+        });
+    }
+
+    // Done button on success panel reloads page to fetch new file list
+    if (closeSuccessBtn) {
+        closeSuccessBtn.addEventListener('click', () => {
+            window.location.reload();
+        });
+    }
+
+    // --- SEARCH BAR INVENTORY FILTER ---
+    const searchFilesInput = document.getElementById('searchFilesInput');
+    const inventoryBody = document.getElementById('inventoryBody');
+    const emptyRow = document.getElementById('emptyStateRow');
+
+    if (searchFilesInput && inventoryBody) {
+        searchFilesInput.addEventListener('input', () => {
+            const filter = searchFilesInput.value.toLowerCase().trim();
+            const rows = inventoryBody.querySelectorAll('tr:not(#emptyStateRow)');
+            let visibleRowsCount = 0;
+
+            rows.forEach(row => {
+                const origName = row.getAttribute('data-originalname').toLowerCase();
+                const fileName = row.getAttribute('data-filename').toLowerCase();
+                if (origName.includes(filter) || fileName.includes(filter)) {
+                    row.style.display = '';
+                    visibleRowsCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            // If empty row is present
+            if (rows.length === 0) return;
+
+            // Handle virtual empty state
+            let virtualEmptyRow = document.getElementById('virtualEmptyRow');
+            if (visibleRowsCount === 0) {
+                if (!virtualEmptyRow) {
+                    virtualEmptyRow = document.createElement('tr');
+                    virtualEmptyRow.id = 'virtualEmptyRow';
+                    virtualEmptyRow.innerHTML = `
+                        <td colspan="5" class="text-center py-4 text-muted">
+                            <i class="bi bi-search-emoji me-2" style="font-size: 1.5rem;"></i> No matching files found.
+                        </td>
+                    `;
+                    inventoryBody.appendChild(virtualEmptyRow);
+                }
+            } else {
+                if (virtualEmptyRow) {
+                    virtualEmptyRow.remove();
+                }
             }
         });
     }
 
-    // Handle the close button click
-    if (closeButton) {
-        closeButton.addEventListener('click', () => {
-            if (pwaToast) pwaToast.classList.remove('visible');
+    // --- INVENTORY TABLE EVENT HANDLERS ---
+    
+    // Copy Share Link
+    document.querySelectorAll('.btn-copy-share').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const link = btn.getAttribute('data-link');
+            copyToClipboard(link);
+        });
+    });
+
+    // Copy CDN Link
+    document.querySelectorAll('.btn-copy-cdn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const link = btn.getAttribute('data-link');
+            copyToClipboard(link);
+        });
+    });
+
+    // Show QR Code modal
+    document.querySelectorAll('.btn-show-qr').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const link = btn.getAttribute('data-link');
+            // Dynamically generate QR base64 using library or load it from backend
+            // In the controller, cdn link is passed to scanned QR.
+            // We can generate it dynamically inside browser or call an API, but wait!
+            // Let's generate QR code base64 from a online service, or generate dynamic canvas!
+            // Generating base64 using a free, fast URL is super easy:
+            const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(link)}`;
+            modalQrCodeImg.src = qrApiUrl;
+            qrModal.classList.remove('hidden');
+        });
+    });
+
+    // Trigger Deletion confirmation modal
+    document.querySelectorAll('.btn-delete-file').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const fileName = btn.getAttribute('data-filename');
+            const row = btn.closest('tr');
+            const originalName = row.getAttribute('data-originalname');
+
+            activeDeleteFileName = fileName;
+            deleteFileNameDisplay.textContent = originalName;
+            deleteModal.classList.remove('hidden');
+        });
+    });
+
+    // Modal Cancellations
+    if (cancelDeleteBtn) {
+        cancelDeleteBtn.addEventListener('click', () => {
+            deleteModal.classList.add('hidden');
+            activeDeleteFileName = null;
         });
     }
 
-    // Listen for the app being installed
-    window.addEventListener('appinstalled', () => {
-        // Hide the install prompt
-        if (pwaToast) pwaToast.classList.remove('visible');
-        // Clear the deferredPrompt so it doesn't show again
-        deferredPrompt = null;
-        console.log('Phoenix XShare was installed.');
-    });
-});
+    if (closeQrModalBtn) {
+        closeQrModalBtn.addEventListener('click', () => {
+            qrModal.classList.add('hidden');
+            modalQrCodeImg.src = '';
+        });
+    }
 
+    // Modal backdrop click cancellations
+    window.addEventListener('click', (e) => {
+        if (e.target === deleteModal) {
+            deleteModal.classList.add('hidden');
+            activeDeleteFileName = null;
+        }
+        if (e.target === qrModal) {
+            qrModal.classList.add('hidden');
+            modalQrCodeImg.src = '';
+        }
+    });
+
+    // Confirm Deletion fetch handler
+    if (confirmDeleteBtn) {
+        confirmDeleteBtn.addEventListener('click', async () => {
+            if (!activeDeleteFileName) return;
+
+            try {
+                const response = await fetch(`/delete/${activeDeleteFileName}`, {
+                    method: 'POST'
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    deleteModal.classList.add('hidden');
+                    showToast('File deleted successfully!');
+                    
+                    // Remove row from UI dynamically
+                    const row = document.querySelector(`tr[data-filename="${activeDeleteFileName}"]`);
+                    if (row) {
+                        row.classList.add('animate-shake'); // Fun deletion anim effect
+                        setTimeout(() => {
+                            row.remove();
+                            // Check if empty state needs to be displayed
+                            const remainingRows = inventoryBody.querySelectorAll('tr:not(#emptyStateRow):not(#virtualEmptyRow)');
+                            if (remainingRows.length === 0) {
+                                if (emptyRow) {
+                                    emptyRow.style.display = '';
+                                } else {
+                                    window.location.reload();
+                                }
+                            }
+                        }, 300);
+                    }
+                } else {
+                    showToast(data.error || 'Failed to delete file.', 'error');
+                }
+            } catch (err) {
+                console.error('Delete error:', err);
+                showToast('Connection error occurred while deleting.', 'error');
+            } finally {
+                activeDeleteFileName = null;
+            }
+        });
+    }
+});

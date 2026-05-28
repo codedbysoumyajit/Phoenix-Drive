@@ -1,58 +1,73 @@
+// views/scripts/download.js
+
 document.addEventListener('DOMContentLoaded', () => {
-  const downloadLink = document.getElementById('downloadLink');
-  const errorElement = document.getElementById('Error');
+    const downloadLink = document.getElementById('downloadLink');
+    const errorBox = document.getElementById('errorBox');
 
-  // Ensure error message is hidden by default
-  if (errorElement) {
-    errorElement.classList.add('hidden');
-  }
+    if (downloadLink) {
+        downloadLink.addEventListener('click', async (event) => {
+            event.preventDefault(); // Stop standard link navigation
 
-  if (downloadLink) {
-    downloadLink.addEventListener('click', async (event) => {
-        event.preventDefault(); // Prevent the default link behavior
-
-        const fileName = downloadLink.getAttribute('data-file-name'); // Corrected attribute name
-
-        // Make a GET request to download the file
-        try {
-            const response = await fetch(`/cdn/${fileName}`);
-
-            if (response.ok) {
-                // If successful, trigger native browser download or open in new tab
-                const blob = await response.blob();
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.style.display = 'none';
-                a.href = url;
-                a.download = fileName; // Suggest filename for download
-                document.body.appendChild(a);
-                a.click();
-                window.URL.revokeObjectURL(url); // Clean up the URL object
-
-                // Hide any previous error message
-                if (errorElement) {
-                    errorElement.classList.add('hidden');
-                    errorElement.textContent = ''; // Clear text
-                }
-            } else {
-                // Form submission failed, display the error message from the response
-                const errorData = await response.text();
-                if (errorElement) {
-                    errorElement.textContent = `Error: ${errorData || 'File not found or access denied.'}`;
-                    errorElement.classList.remove('hidden');
-                }
-                console.error('Download failed:', response.status, response.statusText);
+            // Clear previous errors
+            if (errorBox) {
+                errorBox.style.display = 'none';
+                errorBox.textContent = '';
             }
-        } catch (error) {
-            // Handle any network or other errors
-            console.error('Network or client error during download:', error);
-            if (errorElement) {
-                errorElement.textContent = 'An error occurred during download. Please try again.';
-                errorElement.classList.remove('hidden');
+
+            const fileName = downloadLink.getAttribute('data-file-name');
+            const originalName = downloadLink.getAttribute('download') || fileName;
+
+            // Update button state to loading
+            const originalHtml = downloadLink.innerHTML;
+            downloadLink.style.pointerEvents = 'none';
+            downloadLink.innerHTML = '<i class="bi bi-arrow-repeat spinner-spin me-2"></i> Fetching File...';
+            downloadLink.classList.add('opacity-75');
+
+            try {
+                const response = await fetch(`/cdn/${fileName}`);
+
+                if (response.ok) {
+                    // Trigger dynamic browser download
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    
+                    const a = document.createElement('a');
+                    a.style.display = 'none';
+                    a.href = url;
+                    a.download = originalName;
+                    document.body.appendChild(a);
+                    a.click();
+                    
+                    // Cleanup
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+
+                    // Restore button state
+                    downloadLink.innerHTML = '<i class="bi bi-check-circle-fill me-2"></i> Download Complete!';
+                    setTimeout(() => {
+                        downloadLink.innerHTML = originalHtml;
+                        downloadLink.style.pointerEvents = 'auto';
+                        downloadLink.classList.remove('opacity-75');
+                    }, 2000);
+                } else {
+                    const errorText = await response.text();
+                    throw new Error(errorText || 'Server responded with an error status.');
+                }
+            } catch (error) {
+                console.error('Download error:', error);
+                
+                // Restore button state on failure
+                downloadLink.innerHTML = originalHtml;
+                downloadLink.style.pointerEvents = 'auto';
+                downloadLink.classList.remove('opacity-75');
+
+                if (errorBox) {
+                    errorBox.textContent = 'Could not retrieve file. It may have expired or been deleted.';
+                    errorBox.style.display = 'block';
+                    errorBox.classList.add('animate-shake');
+                    setTimeout(() => errorBox.classList.remove('animate-shake'), 500);
+                }
             }
-        }
-    });
-  } else {
-    console.warn("Download link element not found on the page.");
-  }
+        });
+    }
 });

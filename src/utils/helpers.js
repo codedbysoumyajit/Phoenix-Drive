@@ -1,14 +1,9 @@
 // utils/helpers.js
 import crypto from "crypto";
-import fs from "fs";
 import path from "path";
 import getDB from "./mongodb.js";
-import log from "./console.js"; // Import your logger
-
-// Define __dirname for temporary decrypted file pathing
-import { fileURLToPath } from "url";
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(path.dirname(__filename)); // Go up two directories to reach project root
+import log from "./console.js";
+import storage from "./storage.js";
 
 /**
  * Generates a random hexadecimal string for session secret.
@@ -27,12 +22,12 @@ export function generateRandomSecret() {
 }
 
 /**
- * Encrypts file data and stores encryption metadata in the database.
- * @param {Buffer} fileData - The unencrypted file data.
- * @param {string} filePath - The path where the encrypted file will be saved.
- * @returns {Promise<string>} A promise that resolves with the path to the encrypted file.
+ * Encrypts a file buffer in-memory and stores the key/iv in the database.
+ * @param {Buffer} fileData - The unencrypted file buffer.
+ * @param {string} fileName - The unique name of the file to identify it in the DB.
+ * @returns {Promise<Buffer>} The encrypted file buffer.
  */
-export async function encryptFile(fileData, filePath) {
+export async function encryptFile(fileData, fileName) {
   const key = crypto.randomBytes(32); // Generate a random 32-byte key
   const iv = crypto.randomBytes(16); // Generate a random 16-byte IV
 
@@ -42,32 +37,31 @@ export async function encryptFile(fileData, filePath) {
     cipher.final(),
   ]);
 
-  fs.writeFileSync(filePath, encryptedData);
-
   const db = await getDB();
   const dataCollection = db.collection("encryption_Data");
 
+  // Save using unique fileName instead of local path to support remote backends
   await dataCollection.insertOne({
-    filePath: filePath,
+    filename: fileName,
     key: key.toString("hex"),
     iv: iv.toString("hex"),
   });
 
-  return filePath;
+  log(`Encrypted file in-memory: ${fileName}`, "info");
+  return encryptedData;
 }
 
 /**
- * Decrypts a file using metadata from the database.
- * @param {string} filePath - The path to the encrypted file.
- * @returns {Promise<string>} A promise that resolves with the path to the decrypted file.
+ * Decrypts an encrypted file buffer in-memory using metadata from the database.
+ * @param {string} fileName - The unique file name to query keys.
+ * @param {Buffer} encryptedData - The encrypted file buffer.
+ * @returns {Promise<Buffer>} The decrypted file buffer.
  */
-export async function decryptFile(filePath) {
-  const encryptedData = fs.readFileSync(filePath);
-
+export async function decryptFile(fileName, encryptedData) {
   const db = await getDB();
   const dataCollection = db.collection("encryption_Data");
 
-  const fileData = await dataCollection.findOne({ filePath: filePath });
+  const fileData = await dataCollection.findOne({ filename: fileName });
 
   if (!fileData || !fileData.key || !fileData.iv) {
     throw new Error("Key or IV not found in database for decryption.");
@@ -82,34 +76,23 @@ export async function decryptFile(filePath) {
     decipher.final(),
   ]);
 
-  // Create a temporary path for the decrypted file
-  const decryptedFilePath = path.join(
-    __dirname,
-    "temp_decrypted",
-    path.basename(filePath),
-  );
-  // Ensure the temp_decrypted directory exists
-  if (!fs.existsSync(path.dirname(decryptedFilePath))) {
-    fs.mkdirSync(path.dirname(decryptedFilePath), { recursive: true });
-  }
-
-  fs.writeFileSync(decryptedFilePath, decryptedData);
-
-  return decryptedFilePath;
+  log(`Decrypted file in-memory: ${fileName}`, "info");
+  return decryptedData;
 }
 
 /**
  * Deletes a file from the filesystem.
+ * @deprecated Kept for legacy compatibility if called, but storage.deleteFile should be preferred.
  * @param {string} filePath - The path of the file to delete.
  */
 export function deleteFile(filePath) {
-  fs.unlink(filePath, (err) => {
-    if (err) {
-      log(`Error deleting file: ${filePath}, Error: ${err.message}`, "error");
-    } else {
-      log(`File deleted successfully: ${filePath}`, "info");
-    }
-  });
+  // Legacy stub - forwards to storage if filename can be extracted, otherwise defaults to local delete
+  try {
+    const fileName = path.basename(filePath);
+    storage.deleteFile(fileName);
+  } catch (err) {
+    log(`Delete file legacy error: ${err.message}`, "error");
+  }
 }
 
 /**
@@ -132,4 +115,34 @@ export function generateShortID() {
     { length: crypto.randomInt(5, 11) },
     () => characters[crypto.randomInt(characters.length)],
   ).join("");
+}
+
+/**
+ * Securely deletes a file from the storage provider and purges all of its metadata from MongoDB.
+ * @param {string} fileName - The unique name of the file to delete.
+ */
+export async function purgeFile(fileName) {
+  try {
+    // 1. Delete file using Storage Manager (FTP, SFTP, or Local)
+    await storage.deleteFile(fileName);
+
+    const db = await getDB();
+    
+    // 2. Delete from encryption_Data collection
+    const encResult = await db.collection("encryption_Data").deleteOne({ filename: fileName });
+    if (encResult.deletedCount > 0) {
+      log(`Cleared encryption keys from DB for: ${fileName}`, "info");
+    }
+
+    // 3. Delete from file_uploadData collection
+    const uploadResult = await db.collection("file_uploadData").deleteOne({ filename: fileName });
+    if (uploadResult.deletedCount > 0) {
+      log(`Cleared upload metadata from DB for: ${fileName}`, "info");
+    }
+
+    return true;
+  } catch (err) {
+    log(`Error in purgeFile for ${fileName}: ${err.message}`, "error");
+    throw err;
+  }
 }

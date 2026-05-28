@@ -20,8 +20,15 @@ function connectToMongo() {
 
     // Begin the connection process and cache the promise
     clientPromise = client.connect()
-      .then(connectedClient => {
+      .then(async connectedClient => {
         log('Successfully connected to MongoDB server.');
+        try {
+          const db = connectedClient.db('phoenix-xshare');
+          await db.collection('users').createIndex({ username: 1 }, { unique: true });
+          log('Unique index on users.username ensured.');
+        } catch (indexErr) {
+          log(`Failed to create unique index on users: ${indexErr.message}`, 'warn');
+        }
         return connectedClient;
       })
       .catch(error => {

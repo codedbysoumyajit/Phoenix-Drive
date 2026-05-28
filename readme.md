@@ -1,68 +1,132 @@
-# Phoenix XShare v2.0
+# Phoenix XShare v3.0
 
-Phoenix XShare is a secure, open-source, and self-hostable file-sharing application built for privacy, performance, and ease of use. It is a private upload server based on [Phoenix Share](https://github.com/Pheonix14/Phoenix-Share), with enhanced features, a modern design, and improved security.
+Phoenix XShare is a secure, cloud-native, and self-hostable private file-sharing application designed for privacy, ease of use, and multi-user scaling. Upgraded to version 3.0, it features pluggable storage backends (Local, FTP, SFTP), strict in-memory buffer encryption, brute-force route protection, and a stunning dark glassmorphic dashboard.
 
-[![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](https://choosealicense.com/licenses/mit/)
-![GitHub Repo stars](https://img.shields.io/github/stars/codedbysoumyajit/Phoenix-XShare)
+[![MIT License](https://img.shields.io/badge/License-MIT-blue.svg)](https://choosealicense.com/licenses/mit/)
+![Node.js Version](https://img.shields.io/badge/Node.js-%3E%3D18.0.0-green.svg)
+![MongoDB Support](https://img.shields.io/badge/Database-MongoDB-darkgreen.svg)
+![Docker Support](https://img.shields.io/badge/Docker-Supported-cyan.svg)
 
-## Key Features
+---
 
-- **Encryption Toggle**: Users can enable or disable encryption for their files. ensuring extra security and privacy.
-- **No External Dependencies**: Phoenix XShare uses a local file system for storage, eliminating the need for external databases or SFTP servers, making setup simple and hassle-free.
-- **User-Friendly Interface**: A sleek, intuitive design that makes file uploading and sharing effortless.
-- **Modern UI**: Completely revamped with a Material You-inspired design for a fresh and responsive experience across devices.
-- **Cross-Platform PWA**: Enhanced Progressive Web App support for a native-like experience on any device, with offline capabilities.
-- **Lightweight & Efficient**: Optimized for speed and resource efficiency, outperforming its predecessor.
-- **Enhanced Security**: Features like session encryption and on-device file encryption for maximum data protection.
-- **Scalable Database**: Now powered by MongoDB for better scalability and data management (upgraded from SQLite).
-- **Performance Boost**: Significant speed improvements for faster uploads, downloads, and app responsiveness.
+## 🔥 Key Upgrades & Features
 
-## Prerequisites
+### 🛡️ Multi-User Registration & Advanced Security
+* **Database Authentication**: Dynamic user management via MongoDB instead of static configuration credentials.
+* **Bcrypt Password Security**: Passwords hashed securely using the standard `bcryptjs` algorithm (10 salt rounds).
+* **Private Host Protection**: Optional `registrationSecret` code to restrict signup access, keeping private servers completely secure.
+* **Session Regulating**: Automatic session regeneration upon login and registration to shield against session-fixation attacks.
 
-- **Node.js (LTS version)**: Ensure Node.js is installed on your system. Download it from [here](https://nodejs.org/en) if needed.
+### 🔌 Pluggable Local & Remote Storage Adapters
+* **Unified API**: Toggle seamlessly between storage providers inside your configuration.
+* **Local Storage**: Saves uploads securely inside the local file structure.
+* **FTP/FTPS Support**: Direct uploads to remote FTP/FTPS servers (using `basic-ftp`).
+* **SFTP Support**: Direct uploads to remote secure shell SFTP servers (using `ssh2-sftp-client`).
 
-## Run Locally
+### 💎 Pure In-Memory Cryptography
+* **Zero Disk Footprint**: Bypasses local disk cache entirely during uploads and downloads. Cryptographic operations (AES-256-CBC) execute strictly in transit via memory buffers.
+* **Global Identifiers**: Encryption keys are linked dynamically to unique `filename` strings inside MongoDB, decoupling database records from local system absolute paths.
 
-To set up and run Phoenix XShare on your local machine, follow these steps:
+### 🚦 Bruteforce & DOS Protection
+* **Spam Armor**: Custom sliding-window memory `rateLimiter.js` middleware.
+* **Auth Safeguard**: Max 15 login/signup actions per 15 minutes to block automated dictionary attacks.
+* **Upload Guard**: Max 50 uploads per 15 minutes to block storage-filling DOS attempts.
 
-1.  **Clone the Repository**:
-    ```bash
-    git clone https://github.com/codedbysoumyajit/Phoenix-XShare.git
-    ```
+### 🚀 Asynchronous Drag-Drop Multi-Uploader
+* **Simultaneous File Queuing**: Drag & drop or browse multiple files at once.
+* **Live Progress Overlays**: Asynchronous multi-upload progress tracker showing live percentages, transferred sizes, and transmission speed.
+* **Quick Link Aggregation**: After a successful upload, retrieve Share Links, direct CDN Links, and QR codes instantly inside a single cohesive success panel.
 
-2.  **Change Directory**:
-    ```bash
-    cd Phoenix-XShare
-    ```
+### 📂 Cloud Inventory Manager Dashboard
+* **Workspace Panel**: A full cloud workspace dashboard where users can filter, preview, scan, and manage inventory.
+* **Live Filter**: Instant name-matching search bar to filter dashboard inventory in real-time.
+* **Secure Purges**: Deleting files purges them instantly from remote FTP/SFTP/local storage and cleans up metadata in MongoDB.
 
-3.  **Install Dependencies**:
-    ```bash
-    npm install
-    ```
+### 🎨 Stunning Dark Glassmorphic Interface
+* **Premium Theme**: Sleek slate-dark palette (`#070a13`) accented with indigo glowing borders (`#6366f1`), glowing cyan highlights (`#06b6d4`), and premium typography (`Outfit`).
+* **Micro-Animations**: Hover animations on action controls, float animations on floating elements, and shake animations on error feedback boxes.
 
-4.  **Fill the Configuration**:
-    - Open the `/config/config.js` file.
-    - Update the necessary configuration options, such as port, encryption toggle, domain, etc.
+### 🐳 Containerized Cloud-Ready Runtime
+* **Cloud-Native Config**: Configurations natively bind to standard `process.env` variables, enabling zero-configuration deployments.
+* **Multi-Container Stack**: Includes a robust `docker-compose.yml` linking a lightweight Alpine Node.js app service and a MongoDB service with double persistent volumes (`uploads-data` and `mongo-data`).
 
-5.  **Start the Server**:
-    ```bash
-    npm run start
-    ```
-    You should see a message like `Phoenix XShare is running on http://localhost:3000` in your terminal.
+---
 
-6.  **Access the Application**:
-    Open your browser and navigate to `http://localhost:3000` to start using Phoenix XShare. Upload and share files securely with ease!
+## 🐳 Running with Docker (Recommended)
 
-## License
+To spin up your entire persistent, optimized cloud sharing platform (Node App + Database + Data Volumes) with a single command:
 
-Phoenix XShare is licensed under the [MIT License](https://choosealicense.com/licenses/mit/). See the [LICENSE](https://github.com/codedbysoumyajit/Phoenix-XShare/blob/main/LICENSE) file for more details.
+1. **Start the containers**:
+   ```bash
+   docker-compose up -d --build
+   ```
+2. **Shut down the containers**:
+   ```bash
+   docker-compose down
+   ```
+3. **Check container logs**:
+   ```bash
+   docker-compose logs -f
+   ```
 
-## Contribute
+---
 
-We welcome contributions to make Phoenix XShare even better!
+## 💻 Running Locally
 
-## Feedback & Support
+### 1. Prerequisites
+* **Node.js**: Version `18.0.0` or higher installed.
+* **MongoDB**: A running local MongoDB database instance or a remote MongoDB Atlas URI connection.
 
-If you encounter any issues or have suggestions, please open an [issue](https://github.com/codedbysoumyajit/Phoenix-XShare/issues) or join the discussion in our community.
+### 2. Setup Steps
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/codedbysoumyajit/Phoenix-XShare.git
+   cd Phoenix-XShare
+   ```
+2. Install the production and socket package dependencies:
+   ```bash
+   npm install
+   ```
+3. Configure settings by adding environment variables or updating configuration defaults inside `config/config.js`:
+   * Set your `mongoURI` (e.g. `mongodb://localhost:27017/phoenix-xshare`).
+   * Set your `domain` (e.g. `http://localhost:3000`).
+   * Choose your `storageProvider` ("local" | "ftp" | "sftp") and fill in credentials if utilizing remote backends.
+   * Customize your `registrationSecret` to keep signup access restricted.
 
-Built with ❤️ and lots of ☕ by Soumyajit Das.
+### 3. Launching
+Start the server with the optimal IPv4 DNS resolution flag:
+```bash
+npm start
+```
+Open your browser and navigate to `http://localhost:3000` to access your new workspace.
+
+---
+
+## ⚙️ Configuration Properties (`config/config.js`)
+
+Below is the complete set of environment keys you can pass to Docker or standard VPS runs:
+
+| Environment Variable | Description | Default |
+| --- | --- | --- |
+| `PORT` | Listening port for the web server | `3000` |
+| `DOMAIN` | Domain URL (required for share/view links) | `http://localhost:3000` |
+| `MONGO_URI` | Connection URI for the MongoDB server | `mongodb://localhost:27017/...` |
+| `ENCRYPTION` | Toggle dynamic AES-256 file encryption (`true` / `false`) | `true` |
+| `REGISTRATION_SECRET`| Optional secret code required for user signup | *Empty (Public)* |
+| `STORAGE_PROVIDER` | Backend storage provider (`local` / `ftp` / `sftp`) | `local` |
+| `FTP_HOST` | Host address of your remote FTP server | `ftp.example.com` |
+| `SFTP_HOST` | Host address of your remote SFTP server | `sftp.example.com` |
+
+---
+
+## 📄 License
+
+Phoenix XShare is licensed under the [MIT License](https://choosealicense.com/licenses/mit/). See the `LICENSE` file for more details.
+
+---
+
+## 🤝 Contributing
+
+Contributions to make Phoenix XShare even better are always welcome! Feel free to open issues or submit pull requests.
+
+*Built with ❤️ and lots of ☕ by Soumyajit Das & The Open Source Community.*

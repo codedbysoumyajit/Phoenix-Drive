@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Phoenix XShare - Viewer</title>
+  <title>Phoenix XShare - File Viewer</title>
 
   <meta property="og:url" content="<%= viewLink %>">
   <meta property="og:type" content="website">
   <meta property="og:title" content="Phoenix XShare - File Viewer">
-  <meta property="og:description" content="Phoenix-XShare is a secure, open-source, and self-hostable file-sharing application built for privacy, performance, and ease of use. File: <%= fileName %>">
+  <meta property="og:description" content="Phoenix-XShare file retrieval and dynamic browser previewer. File: <%= originalName %>">
 
   <meta id="ogImageMeta" property="og:image" content="/icons/phoenix-xshare-default-og.png">
   <meta id="ogImageWidth" property="og:image:width" content="1200" />
@@ -21,60 +21,74 @@
 
   <meta id="twitterCard" name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Phoenix XShare - File Viewer">
-  <meta name="twitter:description" content="Phoenix-XShare is a secure, open-source, and self-hostable file-sharing application built for privacy, performance, and ease of use. File: <%= fileName %>">
+  <meta name="twitter:description" content="Phoenix-XShare file retrieval and dynamic browser previewer. File: <%= originalName %>">
 
   <meta id="twitterImageMeta" name="twitter:image" content="/icons/phoenix-xshare-default-og.png">
   <meta id="twitterImageWidth" property="twitter:image:width" content="1200" />
   <meta id="twitterImageHeight" property="twitter:image:height" content="630" />
 
-  <meta id="twitterPlayerMeta" name="twitter:player" content="">
-  <meta id="twitterPlayerWidth" name="twitter:player:width" content="">
-  <meta id="twitterPlayerHeight" name="twitter:player:height" content="">
-
   <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16x16.png">
   <link rel="manifest" href="/site.webmanifest">
-  <link rel="mask-icon" href="/icons/safari-pinned-tab.svg" color="#5bbad5">
+  <link rel="mask-icon" href="/icons/safari-pinned-tab.svg" color="#6366f1">
   <meta name="apple-mobile-web-app-title" content="Phoenix XShare">
   <meta name="application-name" content="Phoenix XShare">
-  <meta name="msapplication-TileColor" content="#1C1B1F">
-  <meta name="theme-color" content="#1C1B1F">
+  <meta name="msapplication-TileColor" content="#0b0f19">
+  <meta name="theme-color" content="#0b0f19">
+  
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,300..700&family=Ubuntu:wght@700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link rel="stylesheet" href="/styles/view.css">
 </head>
-<body>
-<div id="mainContainer" class="container">
-    <img class="logo" src="/icons/logo-trans.png" alt="Phoenix XShare Logo">
-    <h1>Phoenix XShare</h1>
-    <div class="content-container">
-        <h2 class="viewer-title"><i class="bi bi-eye-fill"></i> Viewing File</h2>
-        <p class="filename-display" data-file-name="<%= fileName %>"><%= fileName %></p>
-
-        <div class="media-display-area" data-api-link="<%= apiLink %>">
-            <div class="loading-spinner-area">
-              <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Loading...</span>
-              </div>
-              <p class="text-muted mt-2">Loading preview...</p>
-            </div>
+<body class="auth-body">
+<div class="viewer-container">
+    <div class="glass-card viewer-card">
+        <div class="brand-header text-center">
+            <img class="logo-img animate-float" src="/icons/logo-trans.png" alt="Logo">
+            <h1 class="brand-title">Phoenix XShare</h1>
+            <p class="brand-subtitle">Dynamic Preview Workspace</p>
         </div>
 
-        <a href="<%= apiLink %>" class="btn-primary-material" download="<%= fileName %>">
-            <i class="bi bi-cloud-arrow-down-fill"></i> Download
-        </a>
-    </div>
-    <div class="footer">
-        Return to <a href="/" class="text-link-material">Home</a>
+        <div class="viewer-content mt-4">
+            <div class="file-landing-header d-flex align-items-center mb-3">
+                <div class="file-icon-wrapper me-3">
+                    <i class="bi bi-eye-fill text-cyan" style="font-size: 2.2rem;"></i>
+                </div>
+                <div class="file-main-details overflow-hidden">
+                    <h3 class="file-display-name text-light text-truncate m-0 filename-display" data-file-name="<%= fileName %>" title="<%= originalName %>"><%= originalName %></h3>
+                    <span class="file-display-size badge bg-cyan-glow mt-1"><i class="bi bi-info-circle"></i> Previewing Item</span>
+                </div>
+            </div>
+
+            <!-- MEDIA DISPLAY PREVIEW VIEWPORT -->
+            <div class="media-display-area p-2 rounded-4 mb-4" data-api-link="<%= apiLink %>">
+                <div class="loading-spinner-area text-center py-5">
+                    <div class="spinner-border text-cyan" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="text-muted mt-2">Generating preview workspace...</p>
+                </div>
+            </div>
+
+            <!-- ACTION BUTTONS -->
+            <a href="<%= apiLink %>" class="btn-premium btn-glow w-100" download="<%= originalName %>">
+                <i class="bi bi-cloud-arrow-down-fill me-2"></i> Download File
+            </a>
+        </div>
+
+        <div class="auth-footer mt-4">
+            Return to <a href="/" class="gradient-link">Dashboard</a>
+        </div>
     </div>
 </div>
-</body>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
 <script src="/scripts/view.js"></script>
 <script src="/scripts/registerSW.js" type="module"></script>
 <script src="https://storage.googleapis.com/workbox-cdn/releases/6.1.5/workbox-sw.js"></script>
+</body>
 </html>

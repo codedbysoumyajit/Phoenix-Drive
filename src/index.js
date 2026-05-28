@@ -27,8 +27,17 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Serve static files from the 'views' directory
-app.use(express.static(path.join(__dirname, "views")));
+// Security Headers Middleware (Performance & clickjacking protection)
+app.use((req, res, next) => {
+  res.setHeader("X-Frame-Options", "DENY");
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("X-XSS-Protection", "1; mode=block");
+  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  next();
+});
+
+// Serve static files from the 'views' directory with 1-day cache-control headers for fast loads
+app.use(express.static(path.join(__dirname, "views"), { maxAge: '1d' }));
 app.set("views", path.join(__dirname, "views"));
 
 // Body parsers
@@ -38,8 +47,6 @@ app.use(cookieParser());
 app.use(fileUpload()); // Make sure this middleware comes before routes that handle file uploads
 app.use(cors());
 
-// Session setup
-const memoryStore = new session.MemoryStore();
 // Generate secret once when the application starts
 const SESSION_SECRET = await generateRandomSecret(); // Await top-level for module
 

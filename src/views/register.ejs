@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Phoenix-XShare is a secure, open-source, and self-hostable file-sharing application built for privacy, performance, and ease of use.">
+    <meta name="description" content="Phoenix-XShare registration page. Create a secure account to upload and manage files.">
     <meta name="author" content="Phoenix">
     <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32x32.png">
@@ -21,7 +21,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="/styles/login.css">
-    <title>Phoenix XShare - Login</title>
+    <title>Phoenix XShare - Register</title>
 </head>
 <body class="auth-body">
 <div class="auth-container">
@@ -29,37 +29,55 @@
         <div class="brand-header">
             <img class="logo-img animate-float" src="/icons/logo-trans.png" alt="Phoenix XShare Logo">
             <h1 class="brand-title">Phoenix XShare</h1>
-            <p class="brand-subtitle">Private Secure File Sharing</p>
+            <p class="brand-subtitle">Create a private account</p>
         </div>
 
-        <form id="loginForm" action="/login" method="POST" class="auth-form mt-4">
+        <form id="registerForm" action="/register" method="POST" class="auth-form mt-4">
             <div class="input-field-group">
                 <i class="bi bi-person-fill input-icon"></i>
-                <input type="text" id="username" name="username" class="custom-input" placeholder="Username" required autocomplete="username">
+                <input type="text" id="username" name="username" class="custom-input" placeholder="Choose Username" required autocomplete="username">
             </div>
             
             <div class="input-field-group">
                 <i class="bi bi-lock-fill input-icon"></i>
-                <input type="password" id="password" name="password" class="custom-input" placeholder="Password" required autocomplete="current-password">
-                <button type="button" id="passwordToggle" class="password-toggle-btn">
+                <input type="password" id="password" name="password" class="custom-input" placeholder="Password (min 6 chars)" required autocomplete="new-password">
+                <button type="button" class="password-toggle-btn" data-target="password">
                     <i class="bi bi-eye-slash"></i>
                 </button>
             </div>
 
+            <div class="input-field-group">
+                <i class="bi bi-shield-lock-fill input-icon"></i>
+                <input type="password" id="confirmPassword" name="confirmPassword" class="custom-input" placeholder="Confirm Password" required autocomplete="new-password">
+                <button type="button" class="password-toggle-btn" data-target="confirmPassword">
+                    <i class="bi bi-eye-slash"></i>
+                </button>
+            </div>
+
+            <% if (secretRequired) { %>
+            <div class="input-field-group">
+                <i class="bi bi-key-fill input-icon text-warning"></i>
+                <input type="password" id="registrationSecret" name="registrationSecret" class="custom-input border-warning-focus" placeholder="Registration Secret Code" required>
+                <button type="button" class="password-toggle-btn" data-target="registrationSecret">
+                    <i class="bi bi-eye-slash"></i>
+                </button>
+            </div>
+            <% } %>
+
             <button type="submit" class="btn-premium btn-glow mt-3 w-100">
-                <i class="bi bi-box-arrow-in-right me-2"></i> Log In
+                <i class="bi bi-person-plus-fill me-2"></i> Register Account
             </button>
         </form>
 
         <div id="errorBox" class="error-box mt-3" style="display: none;"></div>
 
         <div class="auth-footer mt-4">
-            Don't have an account? <a href="/register" class="gradient-link">Register Here</a>
+            Already have an account? <a href="/login" class="gradient-link">Login Here</a>
         </div>
     </div>
 </div>
 
-<script src="/scripts/login.js" type="module"></script>
+<script src="/scripts/register.js" type="module"></script>
 <script src="/scripts/registerSW.js" type="module"></script>
 <script src="https://storage.googleapis.com/workbox-cdn/releases/6.1.5/workbox-sw.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
