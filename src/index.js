@@ -60,12 +60,6 @@ app.use(
       dbName: "phoenix-xshare",
       collectionName: "sessions",
       ttl: 14 * 24 * 60 * 60, // 14 days in seconds
-      crypto: {
-        secret: SESSION_SECRET, // use a strong, random string here
-        algorithm: "aes-256-gcm", // optional, default
-        hashing: "sha512",        // optional, default
-        encodeAs: "hex",          // optional, default
-      },
     }),
     cookie: {
       maxAge: 14 * 24 * 60 * 60 * 1000, // 14 days in milliseconds
