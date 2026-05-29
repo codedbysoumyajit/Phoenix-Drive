@@ -2,17 +2,14 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 
 export default function DownloadPage({ params }) {
-  // Use React.use() helper if available (Next.js 15 compatibility) to unwrap route parameters safely
   const unwrappedParams = React.use ? React.use(params) : params;
   const { fileName } = unwrappedParams;
 
   const [metadata, setMetadata] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const router = useRouter();
 
   useEffect(() => {
     if (!fileName) return;
@@ -40,7 +37,7 @@ export default function DownloadPage({ params }) {
       <div className="container-center" style={{ minHeight: "100vh" }}>
         <div style={{ textAlign: "center" }}>
           <div className="loader-spinner" />
-          <p style={{ marginTop: "16px", color: "var(--text-secondary)" }}>Fetching file credentials...</p>
+          <p style={{ marginTop: "16px", color: "var(--text-secondary)" }}>FETCHING CREDENTIALS...</p>
         </div>
         <style dangerouslySetInnerHTML={{__html: `
           .loader-spinner {
@@ -62,11 +59,11 @@ export default function DownloadPage({ params }) {
   if (error) {
     return (
       <div className="container-center" style={{ minHeight: "100vh" }}>
-        <div className="glass-panel" style={{ width: "100%", maxWidth: "440px", padding: "40px", textAlign: "center" }}>
+        <div className="auth-card" style={{ textAlign: "center" }}>
           <div style={{ fontSize: "3rem", color: "var(--accent-rose)", marginBottom: "16px" }}>⚠</div>
           <h2 style={{ fontSize: "1.5rem", fontWeight: "700", marginBottom: "8px" }}>Secure Gateway Error</h2>
-          <p style={{ color: "var(--text-secondary)", fontSize: "0.95rem", marginBottom: "24px" }}>{error}</p>
-          <Link href="/login" className="btn-primary" style={{ display: "inline-flex", textDecoration: "none" }}>
+          <p style={{ color: "var(--text-secondary)", fontSize: "0.95rem", marginBottom: "28px" }}>{error}</p>
+          <Link href="/login" className="btn-submit" style={{ textDecoration: "none" }}>
             Return to Gateway
           </Link>
         </div>
@@ -75,130 +72,115 @@ export default function DownloadPage({ params }) {
   }
 
   return (
-    <div className="container-center animate-fade-in" style={{ minHeight: "100vh" }}>
-      <div className="glass-panel" style={{ width: "100%", maxWidth: "480px", padding: "40px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "10px", justifyContent: "center", marginBottom: "32px" }}>
+    <div className="container-center animate-entrance" style={{ minHeight: "100vh" }}>
+      <div className="auth-card">
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", justifyContent: "center", marginBottom: "8px" }}>
           <div style={{
-            width: "28px",
-            height: "28px",
-            background: "var(--gradient-brand)",
+            width: "30px",
+            height: "30px",
+            background: "var(--gradient-cyber)",
             borderRadius: "50%",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             fontWeight: "800",
-            fontSize: "0.8rem"
+            fontSize: "0.9rem"
           }}>P</div>
-          <h1 className="text-gradient" style={{ fontSize: "1.4rem", fontWeight: "800" }}>Phoenix XShare</h1>
+          <h1 className="text-gradient" style={{ fontSize: "1.5rem", fontWeight: "800" }}>Phoenix XShare</h1>
         </div>
 
-        <div style={{ textAlign: "center", marginBottom: "28px" }}>
+        <div style={{ textAlign: "center", marginBottom: "12px" }}>
           <div style={{
-            width: "60px",
-            height: "60px",
+            width: "64px",
+            height: "64px",
             borderRadius: "50%",
-            background: "rgba(6, 182, 212, 0.1)",
-            border: "1px solid rgba(6, 182, 212, 0.2)",
+            background: "rgba(6, 182, 212, 0.08)",
+            border: "1px solid rgba(6, 182, 212, 0.25)",
             display: "inline-flex",
             alignItems: "center",
             justifyContent: "center",
             fontSize: "1.8rem",
             color: "var(--accent-cyan)",
-            marginBottom: "16px",
-            boxShadow: "var(--accent-glow)"
+            marginBottom: "20px",
+            boxShadow: "0 0 20px rgba(6, 182, 212, 0.15)"
           }}>
             ⇩
           </div>
           
           <h2 style={{
-            fontSize: "1.2rem",
-            fontWeight: "700",
+            fontSize: "1.25rem",
+            fontWeight: "750",
             color: "var(--text-primary)",
             lineHeight: "1.4",
             wordBreak: "break-all",
-            padding: "0 8px"
+            padding: "0 4px"
           }}>
             {metadata.originalName}
           </h2>
-          <p style={{ color: "var(--text-muted)", fontSize: "0.85rem", marginTop: "4px" }}>
-            Ready for secure transmission
+          <p style={{ color: "var(--text-secondary)", fontSize: "0.85rem", marginTop: "6px", fontWeight: "650", letterSpacing: "0.05em" }}>
+            TRANSMISSION GATEWAY ACTIVE
           </p>
         </div>
 
-        {/* File specs card */}
+        {/* File Details Box */}
         <div style={{
           background: "rgba(255,255,255,0.01)",
           border: "1px solid var(--border-color)",
           borderRadius: "var(--radius-md)",
-          padding: "16px 20px",
+          padding: "18px 24px",
           display: "flex",
           flexDirection: "column",
-          gap: "10px",
-          fontSize: "0.9rem",
-          marginBottom: "28px"
+          gap: "12px",
+          fontSize: "0.9rem"
         }}>
           <div style={{ display: "flex", justifyContent: "space-between" }}>
-            <span style={{ color: "var(--text-secondary)" }}>File Size</span>
-            <span style={{ color: "var(--text-primary)", fontWeight: "600" }}>{metadata.fileSize}</span>
+            <span style={{ color: "var(--text-secondary)" }}>FILE SIZE</span>
+            <span style={{ color: "var(--text-primary)", fontWeight: "700" }}>{metadata.fileSize}</span>
           </div>
           
           <div style={{ display: "flex", justifyContent: "space-between" }}>
-            <span style={{ color: "var(--text-secondary)" }}>Upload Time</span>
-            <span style={{ color: "var(--text-primary)", fontWeight: "600" }}>{metadata.uploadTime}</span>
+            <span style={{ color: "var(--text-secondary)" }}>TIMESTAMP</span>
+            <span style={{ color: "var(--text-primary)", fontWeight: "700" }}>{metadata.uploadTime}</span>
           </div>
 
           <div style={{ display: "flex", justifyContent: "space-between" }}>
-            <span style={{ color: "var(--text-secondary)" }}>Uploader</span>
-            <span style={{ color: "var(--text-primary)", fontWeight: "600" }}>{metadata.uploader}</span>
+            <span style={{ color: "var(--text-secondary)" }}>OPERATIVE</span>
+            <span style={{ color: "var(--text-primary)", fontWeight: "700" }}>{metadata.uploader.toUpperCase()}</span>
           </div>
 
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span style={{ color: "var(--text-secondary)" }}>Encryption</span>
+            <span style={{ color: "var(--text-secondary)" }}>DECRYPT STATE</span>
             {metadata.encryption === "true" ? (
-              <span style={{
-                fontSize: "0.75rem",
-                fontWeight: "700",
-                color: "var(--accent-purple)",
-                backgroundColor: "rgba(168, 85, 247, 0.15)",
-                border: "1px solid rgba(168, 85, 247, 0.3)",
-                padding: "2px 8px",
-                borderRadius: "4px"
-              }}>Active</span>
+              <span className="badge-capsule badge-purple">AES Secured</span>
             ) : (
-              <span style={{ color: "var(--text-muted)", fontWeight: "500" }}>None</span>
+              <span className="badge-capsule badge-cyan">Raw Buffer</span>
             )}
           </div>
         </div>
 
-        {/* Action Button */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+        {/* Action Buttons */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
           <a 
             href={`/cdn/${metadata.fileName}`}
-            className="btn-primary"
+            className="btn-submit"
             style={{ 
               textDecoration: "none", 
               textAlign: "center",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "8px"
+              margin: "0"
             }}
           >
-            Download File
+            Download Payload
           </a>
 
           <Link 
             href={`/view/${metadata.fileName}`}
-            className="btn-secondary"
+            className="btn-action-cyan"
             style={{ 
               textDecoration: "none", 
-              textAlign: "center",
-              border: "1px solid rgba(6, 182, 212, 0.25)",
-              color: "var(--accent-cyan)",
-              background: "rgba(6, 182, 212, 0.02)"
+              textAlign: "center"
             }}
           >
-            Preview Asset
+            Preview Media Asset
           </Link>
         </div>
       </div>

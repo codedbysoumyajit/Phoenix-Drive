@@ -12,12 +12,11 @@ export default function Login() {
   const router = useRouter();
 
   useEffect(() => {
-    // If user is already logged in, send them straight to upload
     fetch("/api/auth/session")
       .then((res) => res.json())
       .then((data) => {
         if (data.loggedIn) {
-          router.replace("/upload");
+          router.replace("/dashboard");
         }
       })
       .catch(() => {});
@@ -40,8 +39,7 @@ export default function Login() {
         throw new Error(data.error || "Login failed.");
       }
 
-      // Login successful
-      router.push("/upload");
+      router.push("/dashboard");
     } catch (err) {
       setError(err.message);
     } finally {
@@ -50,56 +48,55 @@ export default function Login() {
   };
 
   return (
-    <div className="container-center animate-fade-in" style={{ minHeight: "100vh" }}>
-      <div className="glass-panel" style={{ width: "100%", maxWidth: "440px", padding: "40px" }}>
-        <div style={{ textAlign: "center", marginBottom: "32px" }}>
-          <h1 className="text-gradient" style={{ fontSize: "2.4rem", marginBottom: "8px" }}>
+    <div className="container-center animate-entrance">
+      <div className="auth-card">
+        <div style={{ textAlign: "center", marginBottom: "8px" }}>
+          <h1 className="text-gradient" style={{ fontSize: "2.5rem", marginBottom: "8px", fontWeight: "800" }}>
             Phoenix XShare
           </h1>
-          <p style={{ color: "var(--text-secondary)", fontSize: "0.95rem", fontWeight: "300" }}>
-            Sign in to access secure file sharing
+          <p style={{ color: "var(--text-secondary)", fontSize: "0.85rem", fontWeight: "650", letterSpacing: "0.05em" }}>
+            AUTHENTICATING GATEWAY
           </p>
         </div>
 
         {error && (
-          <div style={{
-            background: "rgba(244, 63, 94, 0.1)",
-            border: "1px solid rgba(244, 63, 94, 0.2)",
-            color: "var(--accent-rose)",
+          <div className="toast-premium toast-error" style={{
+            position: "static",
+            boxShadow: "none",
+            animation: "none",
             padding: "12px 16px",
             borderRadius: "var(--radius-md)",
-            fontSize: "0.9rem",
-            marginBottom: "24px"
+            fontSize: "0.9rem"
           }}>
-            {error}
+            <span>{error}</span>
           </div>
         )}
 
         <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-            <label htmlFor="username" style={{ fontSize: "0.85rem", fontWeight: "600", color: "var(--text-secondary)" }}>
-              Username
+          <div className="form-group">
+            <label htmlFor="username" className="form-label">
+              OPERATIVE ID
             </label>
             <input
               id="username"
               type="text"
-              className="input-control"
-              placeholder="Enter your username"
+              className="form-input"
+              placeholder="Enter credentials"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
             />
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-            <label htmlFor="password" style={{ fontSize: "0.85rem", fontWeight: "600", color: "var(--text-secondary)" }}>
-              Password
+          <div className="form-group">
+            <label htmlFor="password" className="form-label">
+              ACCESS PASSCODE
             </label>
             <input
               id="password"
               type="password"
-              className="input-control"
-              placeholder="Enter your password"
+              className="form-input"
+              placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -108,33 +105,33 @@ export default function Login() {
 
           <button
             type="submit"
-            className="btn-primary"
+            className="btn-submit"
             disabled={loading}
-            style={{ marginTop: "8px", position: "relative" }}
+            style={{ marginTop: "8px" }}
           >
             {loading ? (
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                 <div className="btn-spinner" />
-                <span>Authenticating...</span>
+                <span>Decrypting Node...</span>
               </div>
             ) : (
-              "Sign In"
+              "Authorize Access"
             )}
           </button>
         </form>
 
-        <div style={{ marginTop: "32px", textAlign: "center", fontSize: "0.9rem", color: "var(--text-secondary)" }}>
-          Don't have an account?{" "}
-          <Link href="/register" style={{ color: "var(--accent-cyan)", textDecoration: "none", fontWeight: "600" }}>
-            Sign Up
+        <div style={{ textAlign: "center", fontSize: "0.9rem", color: "var(--text-secondary)" }}>
+          New operative?{" "}
+          <Link href="/register" style={{ color: "var(--accent-cyan)", textDecoration: "none", fontWeight: "750" }}>
+            Create Account
           </Link>
         </div>
       </div>
 
       <style dangerouslySetInnerHTML={{__html: `
         .btn-spinner {
-          width: 16px;
-          height: 16px;
+          width: 18px;
+          height: 18px;
           border: 2px solid rgba(255, 255, 255, 0.2);
           border-top-color: #ffffff;
           border-radius: 50%;

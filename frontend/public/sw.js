@@ -7,6 +7,8 @@ const ASSETS_TO_CACHE = [
   '/login',
   '/register',
   '/upload',
+  '/dashboard',
+  '/console',
   '/favicon.ico',
   '/site.webmanifest',
   '/browserconfig.xml',

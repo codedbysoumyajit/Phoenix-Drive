@@ -88,7 +88,7 @@ export const registerUser = async (req, res) => {
       }
       req.session.user = trimmedUsername;
       req.session.loggedIn = true;
-      return res.status(201).json({ success: true, username: trimmedUsername, redirectUrl: "/upload" });
+      return res.status(201).json({ success: true, username: trimmedUsername, redirectUrl: "/dashboard" });
     });
 
   } catch (err) {
@@ -133,7 +133,7 @@ export const loginUser = async (req, res) => {
       req.session.user = trimmedUsername;
       req.session.loggedIn = true;
       log(`User logged in: ${trimmedUsername}`, "info");
-      return res.status(200).json({ success: true, username: trimmedUsername, redirectUrl: "/upload" });
+      return res.status(200).json({ success: true, username: trimmedUsername, redirectUrl: "/dashboard" });
     });
 
   } catch (err) {

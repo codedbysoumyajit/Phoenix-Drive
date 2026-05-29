@@ -15,17 +15,15 @@ export default function Register() {
   const router = useRouter();
 
   useEffect(() => {
-    // 1. If user is already logged in, redirect to upload
     fetch("/api/auth/session")
       .then((res) => res.json())
       .then((data) => {
         if (data.loggedIn) {
-          router.replace("/upload");
+          router.replace("/dashboard");
         }
       })
       .catch(() => {});
 
-    // 2. Fetch server registration settings
     fetch("/api/auth/config")
       .then((res) => res.json())
       .then((data) => {
@@ -64,8 +62,7 @@ export default function Register() {
         throw new Error(data.error || "Registration failed.");
       }
 
-      // Registration & Auto-login successful
-      router.push("/upload");
+      router.push("/dashboard");
     } catch (err) {
       setError(err.message);
     } finally {
@@ -74,40 +71,39 @@ export default function Register() {
   };
 
   return (
-    <div className="container-center animate-fade-in" style={{ minHeight: "100vh" }}>
-      <div className="glass-panel" style={{ width: "100%", maxWidth: "460px", padding: "40px" }}>
-        <div style={{ textAlign: "center", marginBottom: "32px" }}>
-          <h1 className="text-gradient" style={{ fontSize: "2.4rem", marginBottom: "8px" }}>
-            Create Account
+    <div className="container-center animate-entrance">
+      <div className="auth-card">
+        <div style={{ textAlign: "center", marginBottom: "8px" }}>
+          <h1 className="text-gradient" style={{ fontSize: "2.5rem", marginBottom: "8px", fontWeight: "800" }}>
+            Operative Signup
           </h1>
-          <p style={{ color: "var(--text-secondary)", fontSize: "0.95rem", fontWeight: "300" }}>
-            Join Phoenix XShare and share files seamlessly
+          <p style={{ color: "var(--text-secondary)", fontSize: "0.85rem", fontWeight: "650", letterSpacing: "0.05em" }}>
+            REGISTER SECURE CREDENTIALS
           </p>
         </div>
 
         {error && (
-          <div style={{
-            background: "rgba(244, 63, 94, 0.1)",
-            border: "1px solid rgba(244, 63, 94, 0.2)",
-            color: "var(--accent-rose)",
+          <div className="toast-premium toast-error" style={{
+            position: "static",
+            boxShadow: "none",
+            animation: "none",
             padding: "12px 16px",
             borderRadius: "var(--radius-md)",
-            fontSize: "0.9rem",
-            marginBottom: "24px"
+            fontSize: "0.9rem"
           }}>
-            {error}
+            <span>{error}</span>
           </div>
         )}
 
         <form onSubmit={handleRegister} style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-            <label htmlFor="username" style={{ fontSize: "0.85rem", fontWeight: "600", color: "var(--text-secondary)" }}>
-              Username
+          <div className="form-group">
+            <label htmlFor="username" className="form-label">
+              CHOOSE USERNAME
             </label>
             <input
               id="username"
               type="text"
-              className="input-control"
+              className="form-input"
               placeholder="Min 3 characters"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
@@ -115,14 +111,14 @@ export default function Register() {
             />
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-            <label htmlFor="password" style={{ fontSize: "0.85rem", fontWeight: "600", color: "var(--text-secondary)" }}>
-              Password
+          <div className="form-group">
+            <label htmlFor="password" className="form-label">
+              CHOOSE PASSWORD
             </label>
             <input
               id="password"
               type="password"
-              className="input-control"
+              className="form-input"
               placeholder="Min 6 characters"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -130,15 +126,15 @@ export default function Register() {
             />
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-            <label htmlFor="confirmPassword" style={{ fontSize: "0.85rem", fontWeight: "600", color: "var(--text-secondary)" }}>
-              Confirm Password
+          <div className="form-group">
+            <label htmlFor="confirmPassword" className="form-label">
+              CONFIRM PASSWORD
             </label>
             <input
               id="confirmPassword"
               type="password"
-              className="input-control"
-              placeholder="Repeat your password"
+              className="form-input"
+              placeholder="Repeat password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
@@ -146,15 +142,15 @@ export default function Register() {
           </div>
 
           {secretRequired && (
-            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-              <label htmlFor="registrationSecret" style={{ fontSize: "0.85rem", fontWeight: "600", color: "var(--accent-cyan)" }}>
-                System Access Secret
+            <div className="form-group">
+              <label htmlFor="registrationSecret" className="form-label" style={{ color: "var(--accent-magenta)" }}>
+                GATEWAY ACCESS SECRET
               </label>
               <input
                 id="registrationSecret"
                 type="text"
-                className="input-control"
-                style={{ borderColor: "rgba(6, 182, 212, 0.25)" }}
+                className="form-input"
+                style={{ borderColor: "rgba(217, 70, 239, 0.25)" }}
                 placeholder="Required secret invite code"
                 value={registrationSecret}
                 onChange={(e) => setRegistrationSecret(e.target.value)}
@@ -165,24 +161,24 @@ export default function Register() {
 
           <button
             type="submit"
-            className="btn-primary"
+            className="btn-submit"
             disabled={loading}
-            style={{ marginTop: "10px", position: "relative" }}
+            style={{ marginTop: "10px" }}
           >
             {loading ? (
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                 <div className="btn-spinner" />
-                <span>Creating Account...</span>
+                <span>Generating credentials...</span>
               </div>
             ) : (
-              "Sign Up"
+              "Initialize operative"
             )}
           </button>
         </form>
 
-        <div style={{ marginTop: "32px", textAlign: "center", fontSize: "0.9rem", color: "var(--text-secondary)" }}>
-          Already have an account?{" "}
-          <Link href="/login" style={{ color: "var(--accent-cyan)", textDecoration: "none", fontWeight: "600" }}>
+        <div style={{ textAlign: "center", fontSize: "0.9rem", color: "var(--text-secondary)" }}>
+          Already registered?{" "}
+          <Link href="/login" style={{ color: "var(--accent-cyan)", textDecoration: "none", fontWeight: "750" }}>
             Sign In
           </Link>
         </div>
@@ -190,8 +186,8 @@ export default function Register() {
 
       <style dangerouslySetInnerHTML={{__html: `
         .btn-spinner {
-          width: 16px;
-          height: 16px;
+          width: 18px;
+          height: 18px;
           border: 2px solid rgba(255, 255, 255, 0.2);
           border-top-color: #ffffff;
           border-radius: 50%;

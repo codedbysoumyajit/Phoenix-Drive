@@ -1,6 +1,7 @@
 // app/layout.js
 import "./globals.css";
 import PwaRegister from "./PwaRegister";
+import Navbar from "./Navbar";
 
 export const metadata = {
   title: "Phoenix XShare | Secure Hyper-Fast File Sharing",
@@ -11,7 +12,7 @@ export const metadata = {
 };
 
 export const viewport = {
-  themeColor: "#05070c",
+  themeColor: "#03060f",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
@@ -27,6 +28,7 @@ export default function RootLayout({ children }) {
       </head>
       <body>
         <PwaRegister />
+        <Navbar />
         {children}
       </body>
     </html>

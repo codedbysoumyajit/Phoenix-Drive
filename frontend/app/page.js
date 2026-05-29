@@ -11,7 +11,7 @@ export default function Home() {
       .then((res) => res.json())
       .then((data) => {
         if (data.loggedIn) {
-          router.replace("/upload");
+          router.replace("/dashboard");
         } else {
           router.replace("/login");
         }

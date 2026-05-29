@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 
 const getFileType = (filename) => {
   if (!filename) return "other";
@@ -32,13 +31,10 @@ export default function ViewPage({ params }) {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  
-  const router = useRouter();
 
   useEffect(() => {
     if (!fileName) return;
 
-    // 1. Check if user is logged in (to customize back button)
     fetch("/api/auth/session")
       .then((res) => res.json())
       .then((data) => {
@@ -46,7 +42,6 @@ export default function ViewPage({ params }) {
       })
       .catch(() => {});
 
-    // 2. Fetch file metadata
     fetch(`/api/files/metadata/${fileName}`)
       .then((res) => {
         if (!res.ok) {
@@ -57,7 +52,6 @@ export default function ViewPage({ params }) {
       .then((data) => {
         setMetadata(data);
         
-        // 3. If file type is text, fetch the content directly for inline viewing!
         const fileType = getFileType(data.originalName || fileName);
         if (fileType === 'text') {
           return fetch(`/cdn/${fileName}`)
@@ -79,7 +73,7 @@ export default function ViewPage({ params }) {
       <div className="container-center" style={{ minHeight: "100vh" }}>
         <div style={{ textAlign: "center" }}>
           <div className="loader-spinner" />
-          <p style={{ marginTop: "16px", color: "var(--text-secondary)" }}>Configuring media interface...</p>
+          <p style={{ marginTop: "16px", color: "var(--text-secondary)", letterSpacing: "0.05em" }}>INITIALIZING MEDIA NODE...</p>
         </div>
         <style dangerouslySetInnerHTML={{__html: `
           .loader-spinner {
@@ -101,11 +95,11 @@ export default function ViewPage({ params }) {
   if (error) {
     return (
       <div className="container-center" style={{ minHeight: "100vh" }}>
-        <div className="glass-panel" style={{ width: "100%", maxWidth: "440px", padding: "40px", textAlign: "center" }}>
+        <div className="auth-card" style={{ textAlign: "center" }}>
           <div style={{ fontSize: "3rem", color: "var(--accent-rose)", marginBottom: "16px" }}>⚠</div>
           <h2 style={{ fontSize: "1.5rem", fontWeight: "700", marginBottom: "8px" }}>Media Portal Error</h2>
           <p style={{ color: "var(--text-secondary)", fontSize: "0.95rem", marginBottom: "24px" }}>{error}</p>
-          <Link href="/" className="btn-primary" style={{ display: "inline-flex", textDecoration: "none" }}>
+          <Link href="/" className="btn-submit" style={{ display: "inline-flex", textDecoration: "none" }}>
             Return Home
           </Link>
         </div>
@@ -117,42 +111,49 @@ export default function ViewPage({ params }) {
   const mediaUrl = `/cdn/${metadata.fileName}`;
 
   return (
-    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", padding: "24px 16px" }}>
-      {/* Header */}
-      <header className="glass-panel" style={{
+    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", padding: "24px 16px" }} className="animate-entrance">
+      
+      {/* Header Nav Bar */}
+      <header className="nav-bar" style={{
         maxWidth: "960px",
         width: "100%",
-        margin: "0 auto 24px auto",
-        padding: "16px 24px",
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center"
+        margin: "0 auto 24px auto"
       }}>
         <div style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "60%" }}>
-          <span style={{ fontSize: "0.85rem", color: "var(--accent-cyan)", fontWeight: "700" }}>VIEWING PORTAL</span>
-          <h1 style={{ fontSize: "1.1rem", fontWeight: "700", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          <span style={{ fontSize: "0.8rem", color: "var(--accent-cyan)", fontWeight: "800", letterSpacing: "0.05em" }}>PREVIEW INTERFACE</span>
+          <h1 style={{ fontSize: "1.15rem", fontWeight: "700", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "var(--text-primary)" }}>
             {metadata.originalName}
           </h1>
         </div>
 
-        <div style={{ display: "flex", gap: "10px" }}>
+        <div style={{ display: "flex", gap: "10px", flexShrink: 0 }}>
           {isLoggedIn ? (
-            <Link href="/upload" className="btn-secondary" style={{ padding: "8px 16px", fontSize: "0.85rem", textDecoration: "none" }}>
+            <Link href="/upload" className="btn-logout" style={{ textDecoration: "none", textAlign: "center" }}>
               Dashboard
             </Link>
           ) : (
-            <Link href={`/download/${metadata.fileName}`} className="btn-secondary" style={{ padding: "8px 16px", fontSize: "0.85rem", textDecoration: "none" }}>
+            <Link href={`/download/${metadata.fileName}`} className="btn-logout" style={{ textDecoration: "none", textAlign: "center" }}>
               Back
             </Link>
           )}
 
-          <a href={mediaUrl} className="btn-primary" style={{ padding: "8px 16px", fontSize: "0.85rem", textDecoration: "none" }}>
+          <a 
+            href={mediaUrl} 
+            className="btn-logout" 
+            style={{ 
+              textDecoration: "none", 
+              textAlign: "center",
+              borderColor: "rgba(6, 182, 212, 0.4)",
+              color: "var(--accent-cyan)",
+              background: "rgba(6, 182, 212, 0.05)"
+            }}
+          >
             Download
           </a>
         </div>
       </header>
 
-      {/* Main Preview Sandbox */}
+      {/* Main Preview Container */}
       <main style={{
         flex: 1,
         maxWidth: "960px",
@@ -163,16 +164,16 @@ export default function ViewPage({ params }) {
         gap: "24px"
       }}>
         
-        {/* Render Sandbox depending on Type */}
-        <section className="glass-panel" style={{
+        {/* Render Preview Frame */}
+        <section className="panel-card" style={{
           padding: "24px",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          minHeight: "400px",
+          minHeight: "420px",
           maxHeight: "75vh",
           overflow: "hidden",
-          background: "rgba(5, 7, 12, 0.4)"
+          background: "rgba(3, 6, 15, 0.55)"
         }}>
           
           {fileType === "image" && (
@@ -185,7 +186,7 @@ export default function ViewPage({ params }) {
                 maxHeight: "65vh",
                 objectFit: "contain",
                 borderRadius: "var(--radius-sm)",
-                boxShadow: "0 10px 30px rgba(0,0,0,0.5)"
+                boxShadow: "0 15px 40px rgba(0,0,0,0.6)"
               }}
             />
           )}
@@ -208,14 +209,14 @@ export default function ViewPage({ params }) {
             <div style={{
               width: "100%",
               maxWidth: "500px",
-              padding: "40px 24px",
+              padding: "48px 24px",
               textAlign: "center",
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
               gap: "24px"
             }}>
-              <div style={{ fontSize: "4rem", animation: "pulse 2s infinite ease-in-out" }}>🎵</div>
+              <div style={{ fontSize: "4.5rem", animation: "pulse 2s infinite ease-in-out" }}>🎵</div>
               <audio 
                 src={mediaUrl} 
                 controls 
@@ -242,15 +243,14 @@ export default function ViewPage({ params }) {
             <pre style={{
               width: "100%",
               height: "100%",
-              minHeight: "350px",
+              minHeight: "380px",
               maxHeight: "60vh",
               overflow: "auto",
-              textAlign: "left",
               fontFamily: "monospace",
               fontSize: "0.9rem",
-              lineHeight: "1.5",
+              lineHeight: "1.6",
               color: "#38bdf8",
-              backgroundColor: "rgba(10, 13, 22, 0.9)",
+              backgroundColor: "rgba(3, 6, 15, 0.95)",
               border: "1px solid var(--border-color)",
               borderRadius: "var(--radius-md)",
               padding: "24px",
@@ -262,51 +262,56 @@ export default function ViewPage({ params }) {
           )}
 
           {fileType === "other" && (
-            <div style={{ textAlign: "center", padding: "40px" }}>
-              <div style={{ fontSize: "4rem", marginBottom: "16px" }}>📄</div>
-              <h2 style={{ fontSize: "1.4rem", fontWeight: "600", marginBottom: "8px" }}>
-                Preview Unavailable
+            <div style={{ textAlign: "center", padding: "40px 16px" }}>
+              <div style={{ fontSize: "4.5rem", marginBottom: "20px" }}>📄</div>
+              <h2 style={{ fontSize: "1.5rem", fontWeight: "700", marginBottom: "10px" }}>
+                Preview Not Available
               </h2>
-              <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem", maxWidth: "340px", margin: "0 auto 24px auto" }}>
-                This file format ({metadata.originalName.split('.').pop() || "unknown"}) cannot be previewed directly in the browser.
+              <p style={{ color: "var(--text-secondary)", fontSize: "0.95rem", maxWidth: "360px", margin: "0 auto 28px auto" }}>
+                Format extension ({metadata.originalName.split('.').pop() || "unknown"}) does not support native browser display rendering.
               </p>
-              <a href={mediaUrl} className="btn-primary" style={{ textDecoration: "none" }}>
-                Download to View
+              <a href={mediaUrl} className="btn-submit" style={{ textDecoration: "none" }}>
+                Download Payload
               </a>
             </div>
           )}
 
         </section>
 
-        {/* Technical Specs Card */}
-        <section className="glass-panel" style={{ padding: "24px", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "20px" }}>
+        {/* Tech Specifications Matrix */}
+        <section className="panel-card" style={{
+          padding: "28px",
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+          gap: "24px"
+        }}>
           <div>
-            <span style={{ fontSize: "0.8rem", color: "var(--text-muted)", display: "block", marginBottom: "4px" }}>FILE SIZE</span>
-            <span style={{ fontSize: "1rem", fontWeight: "600" }}>{metadata.fileSize}</span>
+            <span style={{ fontSize: "0.8rem", color: "var(--text-muted)", display: "block", marginBottom: "6px", fontWeight: "700", letterSpacing: "0.05em" }}>BUFFER CAPACITY</span>
+            <span style={{ fontSize: "1.05rem", fontWeight: "700" }}>{metadata.fileSize}</span>
           </div>
 
           <div>
-            <span style={{ fontSize: "0.8rem", color: "var(--text-muted)", display: "block", marginBottom: "4px" }}>ENCRYPTION</span>
+            <span style={{ fontSize: "0.8rem", color: "var(--text-muted)", display: "block", marginBottom: "6px", fontWeight: "700", letterSpacing: "0.05em" }}>ENCRYPT PROTOCOL</span>
             <span style={{ 
-              fontSize: "0.95rem", 
-              fontWeight: "700",
-              color: metadata.encryption === "true" ? "var(--accent-purple)" : "var(--text-secondary)"
+              fontSize: "1rem", 
+              fontWeight: "750",
+              color: metadata.encryption === "true" ? "var(--accent-magenta)" : "var(--text-secondary)"
             }}>
-              {metadata.encryption === "true" ? "AES Encrypted (Secure)" : "Standard Transmission"}
+              {metadata.encryption === "true" ? "AES-256 (Locked)" : "Standard RAW"}
             </span>
           </div>
 
           <div>
-            <span style={{ fontSize: "0.8rem", color: "var(--text-muted)", display: "block", marginBottom: "4px" }}>TRANSMISSION ID</span>
-            <span style={{ fontSize: "0.9rem", fontFamily: "monospace", color: "var(--accent-cyan)" }}>
-              {metadata.fileName.split('-').pop().split('.')[0] || "Unknown"}
+            <span style={{ fontSize: "0.8rem", color: "var(--text-muted)", display: "block", marginBottom: "6px", fontWeight: "700", letterSpacing: "0.05em" }}>TRANS-HEX ID</span>
+            <span style={{ fontSize: "0.95rem", fontFamily: "monospace", color: "var(--accent-cyan)", fontWeight: "600" }}>
+              {metadata.fileName.split('-').pop().split('.')[0]?.toUpperCase() || "UNKNOWN"}
             </span>
           </div>
 
           <div>
-            <span style={{ fontSize: "0.8rem", color: "var(--text-muted)", display: "block", marginBottom: "4px" }}>METADATA INTEGRITY</span>
-            <span style={{ fontSize: "0.95rem", color: "var(--accent-emerald)", fontWeight: "600" }}>
-              ✓ Verified
+            <span style={{ fontSize: "0.8rem", color: "var(--text-muted)", display: "block", marginBottom: "6px", fontWeight: "700", letterSpacing: "0.05em" }}>NODE AUTH STATE</span>
+            <span style={{ fontSize: "1rem", color: "var(--accent-emerald)", fontWeight: "700" }}>
+              ✓ Verified Operative
             </span>
           </div>
         </section>
