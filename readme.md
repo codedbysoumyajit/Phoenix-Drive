@@ -1,132 +1,116 @@
-# Phoenix XShare v3.0
-
-Phoenix XShare is a secure, cloud-native, and self-hostable private file-sharing application designed for privacy, ease of use, and multi-user scaling. Upgraded to version 3.0, it features pluggable storage backends (Local, FTP, SFTP), strict in-memory buffer encryption, brute-force route protection, and a stunning dark glassmorphic dashboard.
-
-[![MIT License](https://img.shields.io/badge/License-MIT-blue.svg)](https://choosealicense.com/licenses/mit/)
-![Node.js Version](https://img.shields.io/badge/Node.js-%3E%3D18.0.0-green.svg)
-![MongoDB Support](https://img.shields.io/badge/Database-MongoDB-darkgreen.svg)
-![Docker Support](https://img.shields.io/badge/Docker-Supported-cyan.svg)
+# Phoenix XShare 3.0
+> **Enterprise-grade client-side encryption. Seamless folder pipelines. High-performance caching and Gzip delivery.**
 
 ---
 
-## 🔥 Key Upgrades & Features
+<p align="center">
+  <img src="https://img.shields.io/badge/Phoenix--XShare-3.0--Stable-06b6d4?style=flat-square&logo=nextdotjs&logoColor=white" alt="Version" />
+  <img src="https://img.shields.io/badge/Security-AES--256--CBC-d946ef?style=flat-square&logo=lock&logoColor=white" alt="Security" />
+  <img src="https://img.shields.io/badge/Database-MongoDB-10b981?style=flat-square&logo=mongodb&logoColor=white" alt="Database" />
+  <img src="https://img.shields.io/badge/Build-Passing-emerald?style=flat-square&logo=github&logoColor=white" alt="Build Status" />
+</p>
 
-### 🛡️ Multi-User Registration & Advanced Security
-* **Database Authentication**: Dynamic user management via MongoDB instead of static configuration credentials.
-* **Bcrypt Password Security**: Passwords hashed securely using the standard `bcryptjs` algorithm (10 salt rounds).
-* **Private Host Protection**: Optional `registrationSecret` code to restrict signup access, keeping private servers completely secure.
-* **Session Regulating**: Automatic session regeneration upon login and registration to shield against session-fixation attacks.
-
-### 🔌 Pluggable Local & Remote Storage Adapters
-* **Unified API**: Toggle seamlessly between storage providers inside your configuration.
-* **Local Storage**: Saves uploads securely inside the local file structure.
-* **FTP/FTPS Support**: Direct uploads to remote FTP/FTPS servers (using `basic-ftp`).
-* **SFTP Support**: Direct uploads to remote secure shell SFTP servers (using `ssh2-sftp-client`).
-
-### 💎 Pure In-Memory Cryptography
-* **Zero Disk Footprint**: Bypasses local disk cache entirely during uploads and downloads. Cryptographic operations (AES-256-CBC) execute strictly in transit via memory buffers.
-* **Global Identifiers**: Encryption keys are linked dynamically to unique `filename` strings inside MongoDB, decoupling database records from local system absolute paths.
-
-### 🚦 Bruteforce & DOS Protection
-* **Spam Armor**: Custom sliding-window memory `rateLimiter.js` middleware.
-* **Auth Safeguard**: Max 15 login/signup actions per 15 minutes to block automated dictionary attacks.
-* **Upload Guard**: Max 50 uploads per 15 minutes to block storage-filling DOS attempts.
-
-### 🚀 Asynchronous Drag-Drop Multi-Uploader
-* **Simultaneous File Queuing**: Drag & drop or browse multiple files at once.
-* **Live Progress Overlays**: Asynchronous multi-upload progress tracker showing live percentages, transferred sizes, and transmission speed.
-* **Quick Link Aggregation**: After a successful upload, retrieve Share Links, direct CDN Links, and QR codes instantly inside a single cohesive success panel.
-
-### 📂 Cloud Inventory Manager Dashboard
-* **Workspace Panel**: A full cloud workspace dashboard where users can filter, preview, scan, and manage inventory.
-* **Live Filter**: Instant name-matching search bar to filter dashboard inventory in real-time.
-* **Secure Purges**: Deleting files purges them instantly from remote FTP/SFTP/local storage and cleans up metadata in MongoDB.
-
-### 🎨 Stunning Dark Glassmorphic Interface
-* **Premium Theme**: Sleek slate-dark palette (`#070a13`) accented with indigo glowing borders (`#6366f1`), glowing cyan highlights (`#06b6d4`), and premium typography (`Outfit`).
-* **Micro-Animations**: Hover animations on action controls, float animations on floating elements, and shake animations on error feedback boxes.
-
-### 🐳 Containerized Cloud-Ready Runtime
-* **Cloud-Native Config**: Configurations natively bind to standard `process.env` variables, enabling zero-configuration deployments.
-* **Multi-Container Stack**: Includes a robust `docker-compose.yml` linking a lightweight Alpine Node.js app service and a MongoDB service with double persistent volumes (`uploads-data` and `mongo-data`).
+Phoenix XShare 3.0 is a secure, high-performance file sharing portal built on Next.js and Express. It features pluggable storage adapters (supporting Local, FTP, and SFTP), zero-knowledge metadata resolution, dynamic PWA capabilities, and an advanced client-side cryptographic system.
 
 ---
 
-## 🐳 Running with Docker (Recommended)
+## Key Upgrades in Version 3.0
 
-To spin up your entire persistent, optimized cloud sharing platform (Node App + Database + Data Volumes) with a single command:
+### State-Driven Seamless Navigation
+The directory navigation workflow has been completely overhauled to eliminate latency and display jumps:
+* **Background Data Prefetching**: Clicking folders or breadcrumbs initiates instantaneous UI state changes and data fetches.
+* **Shimmering Cyber Skeletons**: Employs custom CSS pulse-animated skeletons styled to match the cyber-cyan interface theme during loading phases.
+* **Scroll Position Preservation**: Standard router jumps are locked (`scroll: false`), ensuring smooth, in-place transitions.
+* **Reactive Navigation Hooks**: Built-in compatibility with browser back and forward actions to synchronize application states smoothly.
 
-1. **Start the containers**:
-   ```bash
-   docker-compose up -d --build
-   ```
-2. **Shut down the containers**:
-   ```bash
-   docker-compose down
-   ```
-3. **Check container logs**:
-   ```bash
-   docker-compose logs -f
-   ```
+### Symmetrical Link-Share Engine
+Direct API exposure and raw download buttons have been replaced with a unified sharing and packaging system:
+* **One-Click Share Links**: Both directories and assets generate shared links (`/download/folder-xxxx`) directly copied to the clipboard.
+* **Unified Public Gateway**: Public download portals recognize folder metadata, providing distinct directory styles (`🗂`), asset manifests, and instant recursive ZIP packaging.
+
+### Bandwidth & Query Optimization
+* **Gzip Payload Compression**: Enabled compression across all Express routes to decrease transit sizes of JSON endpoints and static assets.
+* **Supercharged MongoDB Indexing**: Added composite index models on startup to accelerate catalog retrievals to sub-millisecond speeds.
 
 ---
 
-## 💻 Running Locally
+## System Architecture
 
-### 1. Prerequisites
-* **Node.js**: Version `18.0.0` or higher installed.
-* **MongoDB**: A running local MongoDB database instance or a remote MongoDB Atlas URI connection.
-
-### 2. Setup Steps
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/codedbysoumyajit/Phoenix-XShare.git
-   cd Phoenix-XShare
-   ```
-2. Install the production and socket package dependencies:
-   ```bash
-   npm install
-   ```
-3. Configure settings by adding environment variables or updating configuration defaults inside `config/config.js`:
-   * Set your `mongoURI` (e.g. `mongodb://localhost:27017/phoenix-xshare`).
-   * Set your `domain` (e.g. `http://localhost:3000`).
-   * Choose your `storageProvider` ("local" | "ftp" | "sftp") and fill in credentials if utilizing remote backends.
-   * Customize your `registrationSecret` to keep signup access restricted.
-
-### 3. Launching
-Start the server with the optimal IPv4 DNS resolution flag:
-```bash
-npm start
+```mermaid
+graph TD
+    A[React / Next.js 16 Client] -->|Seamless Routing| B[Express Gateway Router]
+    B -->|Gzip Compression| C[Express Controller Logic]
+    C -->|Indexed Queries| D[(MongoDB Cluster)]
+    C -->|AES-256 Cipher| E[Pluggable Storage Manager]
+    E -->|Storage Adapter| F[Local Disk / FTP / SFTP]
 ```
-Open your browser and navigate to `http://localhost:3000` to access your new workspace.
+
+* **Frontend**: Next.js 16 (App Router), Vanilla CSS, React Hooks, HTML5 Drag & Drop.
+* **Backend**: Express.js, `express-fileupload`, `basic-ftp`, `ssh2-sftp-client`.
+* **Database**: MongoDB (Sessions + Upload Catalog + Cipher Registry).
+* **Security**: Client-side AES-256-CBC envelope encryption, session tokens, rate limiting.
 
 ---
 
-## ⚙️ Configuration Properties (`config/config.js`)
-
-Below is the complete set of environment keys you can pass to Docker or standard VPS runs:
-
-| Environment Variable | Description | Default |
-| --- | --- | --- |
-| `PORT` | Listening port for the web server | `3000` |
-| `DOMAIN` | Domain URL (required for share/view links) | `http://localhost:3000` |
-| `MONGO_URI` | Connection URI for the MongoDB server | `mongodb://localhost:27017/...` |
-| `ENCRYPTION` | Toggle dynamic AES-256 file encryption (`true` / `false`) | `true` |
-| `REGISTRATION_SECRET`| Optional secret code required for user signup | *Empty (Public)* |
-| `STORAGE_PROVIDER` | Backend storage provider (`local` / `ftp` / `sftp`) | `local` |
-| `FTP_HOST` | Host address of your remote FTP server | `ftp.example.com` |
-| `SFTP_HOST` | Host address of your remote SFTP server | `sftp.example.com` |
+## Cryptographic Integrity
+1. **Entropy Injection**: Unique 128-bit Initialization Vector (IV) and 256-bit symmetric keys are generated dynamically in-memory per file.
+2. **Database Separation**: Decryption keys are isolated in the `encryption_Data` collection and are never exposed on standard file schemas.
+3. **Recursive In-Memory Zipping**: Directories are zipped dynamically. Binaries are fetched and decrypted on the fly in-memory, avoiding temporary storage of decrypted plain text on server disks.
 
 ---
 
-## 📄 License
-
-Phoenix XShare is licensed under the [MIT License](https://choosealicense.com/licenses/mit/). See the `LICENSE` file for more details.
+## Directory Structure
+```
+├── backend/
+│   ├── config/              # Credentials and server settings
+│   ├── src/
+│   │   ├── controllers/     # Main controller logic (Auth, Upload, Cryptography)
+│   │   ├── middleware/      # Authentication checks, rate limiters
+│   │   ├── routes/          # Express route declarations
+│   │   ├── utils/           # DB connectors, FTP clients, encryption helpers
+│   │   └── index.js         # API Gateway Entry Point
+│   └── package.json
+├── frontend/
+│   ├── app/                 # Next.js App Router
+│   │   ├── dashboard/       # Main operator dashboard
+│   │   ├── download/        # Public download gateway
+│   │   ├── view/            # Live preview frame (Images, Video, Text, Audio)
+│   │   ├── globals.css      # Design system token definitions
+│   │   └── layout.js        # Global App wrapper
+│   └── package.json
+└── package.json             # Monorepo workspace control
+```
 
 ---
 
-## 🤝 Contributing
+## Getting Started
 
-Contributions to make Phoenix XShare even better are always welcome! Feel free to open issues or submit pull requests.
+### 1. Environment Configuration
+Create or edit `config/config.js` with your environment parameters:
+```javascript
+export default {
+  settings: {
+    port: 5000,
+    mongoURI: "mongodb://127.0.0.1:27017/phoenix-xshare",
+    storageProvider: "local", // local, ftp, or sftp
+    encryption: true,         // auto AES-256
+    domain: "http://localhost:3000"
+  }
+};
+```
 
-*Built with ❤️ and lots of ☕ by Soumyajit Das & The Open Source Community.*
+### 2. Installation and Startup
+Ensure Node.js and MongoDB are running, then execute:
+```bash
+# Install dependencies across monorepo workspaces
+npm run install:all
+
+# Run both services concurrently (API: 5000, Client: 3000)
+npm run dev
+```
+
+---
+
+<p align="center">
+  Developed by the Phoenix-XShare Core Team. Released under the MIT License.
+</p>

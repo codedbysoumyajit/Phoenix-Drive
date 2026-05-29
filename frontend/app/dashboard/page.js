@@ -483,6 +483,14 @@ function DashboardContent() {
                     ) : (
                       <>
                         <button 
+                          onClick={() => router.push(`/view/${file.filename}`)} 
+                          className="btn-action-cyan"
+                          style={{ gridColumn: "span 2" }}
+                        >
+                          View & Preview
+                        </button>
+
+                        <button 
                           onClick={() => handleCopyLink(file.filename)} 
                           className="btn-action-secondary"
                         >
@@ -495,13 +503,6 @@ function DashboardContent() {
                         >
                           QR Share
                         </button>
-
-                        <button 
-                          onClick={() => router.push(`/view/${file.filename}`)} 
-                          className="btn-action-cyan"
-                        >
-                          View & Preview
-                        </button>
                         
                         <button 
                           onClick={() => setMoveModal({ open: true, item: file, destination: "root" })}
@@ -513,6 +514,7 @@ function DashboardContent() {
                         <button 
                           onClick={() => handleDeleteItem(file.filename, false, file.originalName)} 
                           className="btn-action-rose"
+                          style={{ gridColumn: "auto" }}
                         >
                           Purge Asset
                         </button>

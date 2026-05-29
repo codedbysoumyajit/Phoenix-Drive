@@ -51,7 +51,22 @@ export default function Navbar() {
       <div className="nav-bar-main">
         {/* Brand logo & title */}
         <div className="nav-brand" style={{ cursor: "pointer" }} onClick={() => router.push(username ? "/dashboard" : "/login")}>
-          <div className="nav-logo">P</div>
+          <div className="nav-logo" style={{
+            width: "36px",
+            height: "36px",
+            background: "var(--gradient-cyber)",
+            borderRadius: "50%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            boxShadow: "0 0 15px rgba(6, 182, 212, 0.45)",
+            flexShrink: 0
+          }}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2L2 22h20L12 2zm0 3.99L18.47 19H5.53L12 5.99z" fill="white" />
+              <path d="M12 9l-4.5 7.5h9L12 9z" fill="rgba(255, 255, 255, 0.4)" />
+            </svg>
+          </div>
           <h1 className="nav-title text-gradient" style={{ fontSize: "1.35rem", fontWeight: "800", letterSpacing: "-0.02em" }}>
             Phoenix XShare
           </h1>
