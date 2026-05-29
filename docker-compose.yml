@@ -13,7 +13,7 @@ services:
       - REGISTRATION_SECRET=
       - STORAGE_PROVIDER=local
     volumes:
-      - uploads-data:/usr/src/app/src/uploads
+      - uploads-data:/usr/src/app/backend/src/uploads
     depends_on:
       - mongo
 

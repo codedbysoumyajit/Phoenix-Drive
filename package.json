@@ -1,29 +1,19 @@
 {
-  "name": "Phoenix XShare",
+  "name": "Phoenix-XShare",
   "version": "1.0.0",
   "type": "module",
-  "description": "",
-  "main": "/src/index.js",
+  "description": "Premium secure file sharing portal written in Next.js & Express",
+  "main": "./backend/src/index.js",
   "scripts": {
-    "start": "node ./src/index.js"
+    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
+    "dev": "concurrently \"cd backend && PORT=5000 node src/index.js\" \"cd frontend && npm run dev\"",
+    "build": "cd frontend && npm run build",
+    "start": "concurrently \"cd backend && PORT=5000 node src/index.js\" \"cd frontend && npm start\""
   },
   "keywords": [],
   "author": "Pheonix",
   "license": "MIT",
   "dependencies": {
-    "basic-ftp": "^6.0.1",
-    "bcryptjs": "^3.0.2",
-    "chalk": "^5.4.1",
-    "connect-mongo": "^5.1.0",
-    "cookie-parser": "^1.4.7",
-    "cors": "^2.8.5",
-    "ejs": "^3.1.10",
-    "express": "^4.21.2",
-    "express-fileupload": "^1.5.1",
-    "express-session": "^1.18.1",
-    "luxon": "^3.6.1",
-    "mongodb": "^6.21.0",
-    "qrcode": "^1.5.4",
-    "ssh2-sftp-client": "^12.1.1"
+    "concurrently": "^8.2.2"
   }
 }
