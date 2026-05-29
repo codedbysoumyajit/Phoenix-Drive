@@ -8,6 +8,9 @@ import {
   getFileMetadata,
   cdnFile,
   deleteFile,
+  createFolder,
+  moveFile,
+  downloadFolderZip,
 } from "../controllers/fileController.js";
 
 const router = Router();
@@ -25,6 +28,10 @@ router.post("/webshare", authenticate, uploadLimiter, webshareUploadFile);
 router.get("/metadata/:fileName", getFileMetadata);
 router.get("/cdn/:fileName", cdnFile);
 router.post("/delete/:fileName", authenticate, deleteFile);
+router.post("/folder", authenticate, createFolder);
+router.post("/move/:fileName", authenticate, moveFile);
+router.get("/zip/:folderName", downloadFolderZip);
 
 export default router;
+
 

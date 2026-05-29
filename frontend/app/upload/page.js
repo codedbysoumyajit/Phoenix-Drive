@@ -1,9 +1,15 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, useRef, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
-export default function UploadDashboard() {
+function UploadDashboardContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  
+  // Read active folder query param
+  const currentFolder = searchParams.get("folder") || "root";
+
   const [username, setUsername] = useState("");
   const [encryptionEnabled, setEncryptionEnabled] = useState(true);
   const [encryptToggleAllowed, setEncryptToggleAllowed] = useState(true);
@@ -19,7 +25,6 @@ export default function UploadDashboard() {
   const [toast, setToast] = useState({ show: false, message: "", type: "success" });
 
   const fileInputRef = useRef(null);
-  const router = useRouter();
 
   // Toast helper
   const showToast = (message, type = "success") => {
@@ -31,7 +36,7 @@ export default function UploadDashboard() {
 
   const fetchDashboardData = async () => {
     try {
-      const res = await fetch("/api/files");
+      const res = await fetch(`/api/files?folder=${currentFolder}`);
       if (res.status === 401) {
         router.replace("/login");
         return;
@@ -51,7 +56,7 @@ export default function UploadDashboard() {
 
   useEffect(() => {
     fetchDashboardData();
-  }, [router]);
+  }, [currentFolder, router]);
 
   // Drag & drop handlers
   const handleDragOver = (e) => {
@@ -92,6 +97,9 @@ export default function UploadDashboard() {
     selectedFiles.forEach((file) => {
       formData.append("file", file);
     });
+    
+    // Append the active parent directory folder path!
+    formData.append("parentFolder", currentFolder);
 
     try {
       setUploadProgress(30);
@@ -110,9 +118,9 @@ export default function UploadDashboard() {
       showToast(`Successfully uploaded ${selectedFiles.length} file(s)!`);
       setSelectedFiles([]);
       
-      // Auto redirect to vault dashboard on successful upload so the user can immediately view/manage their files!
+      // Auto redirect back into the exact same folder on success!
       setTimeout(() => {
-        router.push("/dashboard");
+        router.push(`/dashboard?folder=${currentFolder}`);
       }, 1000);
     } catch (err) {
       showToast(err.message, "error");
@@ -158,7 +166,9 @@ export default function UploadDashboard() {
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px" }}>
             <div>
               <h2 style={{ fontSize: "1.85rem", fontWeight: "800" }}>Transmit Assets</h2>
-              <p style={{ color: "var(--text-secondary)", fontSize: "0.95rem" }}>Secure, encrypted file upload portal</p>
+              <p style={{ color: "var(--text-secondary)", fontSize: "0.95rem" }}>
+                Active Target Directory: <span style={{ color: "var(--accent-cyan)", fontWeight: "bold" }}>{currentFolder === "root" ? "ROOT" : currentFolder.split('-')[1]?.toUpperCase() || "SUBFOLDER"}</span>
+              </p>
             </div>
             
             {/* Encryption Switch */}
@@ -313,5 +323,32 @@ export default function UploadDashboard() {
         </div>
       )}
     </div>
+  );
+}
+
+// Default export wrapped in a Suspense boundary to prevent statically generated bail-out build crashes
+export default function UploadPage() {
+  return (
+    <Suspense fallback={
+      <div className="container-center" style={{ minHeight: "100vh" }}>
+        <div style={{ textAlign: "center" }}>
+          <div style={{
+            width: "44px",
+            height: "44px",
+            border: "2px solid rgba(6, 182, 212, 0.1)",
+            borderTopColor: "var(--accent-cyan)",
+            borderRadius: "50%",
+            animation: "spin 0.8s linear infinite",
+            display: "inline-block"
+          }} />
+          <p style={{ marginTop: "16px", color: "var(--text-secondary)", letterSpacing: "0.05em" }}>CONNECTING TRANSMISSION MATRIX...</p>
+        </div>
+        <style dangerouslySetInnerHTML={{__html: `
+          @keyframes spin { to { transform: rotate(360deg); } }
+        `}} />
+      </div>
+    }>
+      <UploadDashboardContent />
+    </Suspense>
   );
 }

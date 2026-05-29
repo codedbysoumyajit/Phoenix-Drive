@@ -26,8 +26,19 @@ function connectToMongo() {
           const db = connectedClient.db('phoenix-xshare');
           await db.collection('users').createIndex({ username: 1 }, { unique: true });
           log('Unique index on users.username ensured.');
+
+          // Index file_uploadData for supercharged searches and dashboard retrieval
+          const fileUploadColl = db.collection('file_uploadData');
+          await fileUploadColl.createIndex({ filename: 1 }, { unique: true });
+          await fileUploadColl.createIndex({ uploader: 1, parentFolder: 1 });
+          log('Indexes on file_uploadData ensured.');
+
+          // Index encryption_Data for instant lookup of encryption credentials
+          const encryptionColl = db.collection('encryption_Data');
+          await encryptionColl.createIndex({ filename: 1 }, { unique: true });
+          log('Indexes on encryption_Data ensured.');
         } catch (indexErr) {
-          log(`Failed to create unique index on users: ${indexErr.message}`, 'warn');
+          log(`Failed to create database indexes: ${indexErr.message}`, 'warn');
         }
         return connectedClient;
       })

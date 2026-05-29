@@ -13,11 +13,13 @@ import config from "../config/config.js";
 import authRoutes from "./routes/authRoutes.js";
 import fileRoutes from "./routes/fileRoutes.js";
 import { generateRandomSecret } from "./utils/helpers.js";
+import compression from "compression";
 
 const app = express();
 const server = createServer(app);
 
 // --- Configuration and Global Middleware ---
+app.use(compression()); // Optimize bandwidth and transfer speeds by Gzipping responses
 app.set("trust proxy", ["loopback", "linklocal", "uniquelocal"]);
 
 // Serve uploads statically if local storage is used (optional, but cdn route is preferred)

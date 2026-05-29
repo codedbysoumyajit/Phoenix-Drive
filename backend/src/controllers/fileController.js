@@ -1,6 +1,7 @@
 // controllers/fileController.js
 import qrCode from "qrcode";
 import { DateTime } from "luxon";
+import AdmZip from "adm-zip";
 import log from "../utils/console.js";
 import getDB from "../utils/mongodb.js";
 import config from "../../config/config.js";
@@ -14,21 +15,46 @@ import {
 } from "../utils/helpers.js";
 
 /**
- * Returns all files uploaded by the authenticated user as JSON.
+ * Returns all files and folders uploaded by the authenticated user in the active folder as JSON.
  */
 export const getUserFiles = async (req, res) => {
   try {
     const username = req.session.user;
+    const parentFolder = req.query.folder || "root";
     const db = await getDB();
     const dataCollection = db.collection("file_uploadData");
 
-    // Fetch all files uploaded by this user, sorted newest first
-    const userFiles = await dataCollection.find({ uploader: username }).sort({ _id: -1 }).toArray();
+    // Fetch folders and files that belong to this parentFolder and uploader, sorting folders first
+    const userFiles = await dataCollection.find({ 
+      uploader: username, 
+      parentFolder: parentFolder 
+    }).sort({ isFolder: -1, _id: -1 }).toArray();
+
+    // Helper to recursively fetch parent names for breadcrumbs
+    const getBreadcrumbs = async (folderName, user, coll) => {
+      const breadcrumbs = [];
+      let current = folderName;
+      while (current && current !== "root") {
+        const folderDoc = await coll.findOne({ filename: current, uploader: user, isFolder: true });
+        if (!folderDoc) break;
+        breadcrumbs.unshift({
+          filename: folderDoc.filename,
+          originalName: folderDoc.originalName
+        });
+        current = folderDoc.parentFolder;
+      }
+      breadcrumbs.unshift({ filename: "root", originalName: "Root" });
+      return breadcrumbs;
+    };
+
+    const breadcrumbs = await getBreadcrumbs(parentFolder, username, dataCollection);
 
     return res.status(200).json({
       success: true,
       username,
       files: userFiles,
+      breadcrumbs,
+      currentFolder: parentFolder,
       encryptionEnabled: config.settings.encryption,
       domain: config.settings.domain,
     });
@@ -39,7 +65,7 @@ export const getUserFiles = async (req, res) => {
 };
 
 /**
- * Handles uploading one or more files.
+ * Handles uploading one or more files into the active folder.
  */
 export const uploadFile = async (req, res) => {
   try {
@@ -48,6 +74,7 @@ export const uploadFile = async (req, res) => {
     }
 
     const username = req.session.user;
+    const parentFolder = req.body.parentFolder || "root";
     const db = await getDB();
     const dataCollection = db.collection("file_uploadData");
 
@@ -96,6 +123,8 @@ export const uploadFile = async (req, res) => {
         uploader: username,
         encryption: `${config.settings.encryption}`,
         fileSize: displaySize,
+        parentFolder: parentFolder,
+        isFolder: false
       };
 
       await dataCollection.insertOne(fileDoc);
@@ -112,6 +141,7 @@ export const uploadFile = async (req, res) => {
         uploadTime: formattedOutput,
         fileSize: displaySize,
         encryption: config.settings.encryption,
+        parentFolder
       });
     }
 
@@ -169,14 +199,31 @@ export const webshareUploadFile = async (req, res) => {
         uploader: username,
         encryption: `${config.settings.encryption}`,
         fileSize: displaySize,
+        parentFolder: "root",
+        isFolder: false
       });
     }
 
-    res.redirect("/upload");
+    res.redirect("/dashboard");
   } catch (err) {
     log(`Webshare controller error: ${err.message}`, "error");
     res.status(500).render("error", { errorMessage: "Webshare upload failed." });
   }
+};
+
+/**
+ * Helper recursively deleting folders and nested items.
+ */
+const deleteFolderRecursively = async (folderName, username, dataCollection) => {
+  const items = await dataCollection.find({ uploader: username, parentFolder: folderName }).toArray();
+  for (const item of items) {
+    if (item.isFolder) {
+      await deleteFolderRecursively(item.filename, username, dataCollection);
+    } else {
+      await purgeFile(item.filename);
+    }
+  }
+  await dataCollection.deleteOne({ uploader: username, filename: folderName, isFolder: true });
 };
 
 /**
@@ -190,22 +237,174 @@ export const deleteFile = async (req, res) => {
     const dataCollection = db.collection("file_uploadData");
 
     // Find file and verify ownership
-    const file = await dataCollection.findOne({ filename: fileName });
-    if (!file) {
-      return res.status(404).json({ error: "File not found in database." });
+    const item = await dataCollection.findOne({ filename: fileName, uploader: username });
+    if (!item) {
+      return res.status(404).json({ error: "Item not found or unauthorized." });
     }
 
-    if (file.uploader !== username) {
-      return res.status(403).json({ error: "Unauthorized. You do not own this file." });
+    if (item.isFolder) {
+      await deleteFolderRecursively(fileName, username, dataCollection);
+    } else {
+      await purgeFile(fileName);
     }
 
-    // Purge file from storage provider and database collections
-    await purgeFile(fileName);
-
-    return res.status(200).json({ success: true, message: "File purged successfully." });
+    return res.status(200).json({ success: true, message: "Item deleted successfully." });
   } catch (err) {
     log(`Delete controller error: ${err.message}`, "error");
-    return res.status(500).json({ error: "Failed to delete file." });
+    return res.status(500).json({ error: "Failed to delete item." });
+  }
+};
+
+/**
+ * Creates a virtual folder document.
+ */
+export const createFolder = async (req, res) => {
+  try {
+    const { folderName, parentFolder } = req.body;
+    const username = req.session.user;
+    
+    if (!folderName || folderName.trim() === "") {
+      return res.status(400).json({ error: "Folder name is required." });
+    }
+
+    const db = await getDB();
+    const dataCollection = db.collection("file_uploadData");
+
+    const shortID = generateShortID();
+    const folderFilename = `folder-${normalizeFileName(folderName)}-${shortID}`;
+
+    const localDateTime = DateTime.local();
+    const formattedOutput = `Date: ${localDateTime.toLocaleString(
+      DateTime.DATE_FULL,
+    )} Time: ${localDateTime.toLocaleString(DateTime.TIME_24_SIMPLE)}`;
+
+    const folderDoc = {
+      filename: folderFilename,
+      originalName: folderName.trim(),
+      uploadTime: formattedOutput,
+      uploader: username,
+      isFolder: true,
+      parentFolder: parentFolder || "root"
+    };
+
+    await dataCollection.insertOne(folderDoc);
+    log(`Folder created successfully: ${folderName} by ${username}`, "info");
+
+    return res.status(201).json({ success: true, folder: folderDoc });
+  } catch (err) {
+    log(`Folder creation controller error: ${err.message}`, "error");
+    return res.status(500).json({ error: "Folder creation failed." });
+  }
+};
+
+/**
+ * Moves a file/folder to another parent folder.
+ */
+export const moveFile = async (req, res) => {
+  try {
+    const { fileName } = req.params;
+    const { destinationFolder } = req.body;
+    const username = req.session.user;
+    
+    if (!destinationFolder) {
+      return res.status(400).json({ error: "Destination folder is required." });
+    }
+
+    const db = await getDB();
+    const dataCollection = db.collection("file_uploadData");
+
+    const result = await dataCollection.updateOne(
+      { filename: fileName, uploader: username },
+      { $set: { parentFolder: destinationFolder } }
+    );
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ error: "Item not found or unauthorized." });
+    }
+
+    return res.status(200).json({ success: true, message: "Item migrated successfully." });
+  } catch (err) {
+    log(`Move item controller error: ${err.message}`, "error");
+    return res.status(500).json({ error: "Failed to move item." });
+  }
+};
+
+/**
+ * Downloads a folder's files recursively zipped in memory.
+ */
+export const downloadFolderZip = async (req, res) => {
+  try {
+    const { folderName } = req.params;
+    const db = await getDB();
+    const dataCollection = db.collection("file_uploadData");
+
+    // Find folder document
+    const folderDoc = await dataCollection.findOne({ filename: folderName, isFolder: true });
+    if (!folderDoc) {
+      log(`ZIP generator: Folder ${folderName} not found in DB.`, "warn");
+      return res.status(404).json({ error: "Folder not found." });
+    }
+
+    const filesToZip = [];
+    
+    // Traverse folders recursively
+    const collectFiles = async (fName, currentPath) => {
+      const items = await dataCollection.find({ parentFolder: fName }).toArray();
+      for (const item of items) {
+        if (item.isFolder) {
+          await collectFiles(item.filename, `${currentPath}${item.originalName}/`);
+        } else {
+          filesToZip.push({
+            doc: item,
+            zipPath: `${currentPath}${item.originalName}`
+          });
+        }
+      }
+    };
+
+    await collectFiles(folderName, "");
+
+    if (filesToZip.length === 0) {
+      return res.status(400).json({ error: "Folder is empty." });
+    }
+
+    const zip = new AdmZip();
+
+    for (const fileItem of filesToZip) {
+      const doc = fileItem.doc;
+      
+      let fileBuffer;
+      try {
+        fileBuffer = await storage.getFile(doc.filename);
+      } catch (storageErr) {
+        log(`ZIP generator: Storage retrieval error for ${doc.filename}: ${storageErr.message}`, "error");
+        continue; 
+      }
+
+      let outputBuffer = fileBuffer;
+      if (doc.encryption === "true") {
+        try {
+          outputBuffer = await decryptFile(doc.filename, fileBuffer);
+        } catch (decryptErr) {
+          log(`ZIP generator: Decryption error for ${doc.filename}: ${decryptErr.message}`, "error");
+          continue; 
+        }
+      }
+
+      zip.addFile(fileItem.zipPath, outputBuffer);
+    }
+
+    const zipBuffer = zip.toBuffer();
+
+    res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(folderDoc.originalName)}.zip"`);
+    res.setHeader('Content-Type', 'application/zip');
+    return res.send(zipBuffer);
+
+  } catch (err) {
+    log(`Folder ZIP download error: ${err.message}`, "error");
+    if (!res.headersSent) {
+      return res.status(500).json({ error: "Failed to generate ZIP archive." });
+    }
   }
 };
 
@@ -218,7 +417,6 @@ export const getFileMetadata = async (req, res) => {
     const db = await getDB();
     const dataCollection = db.collection("file_uploadData");
 
-    // Rely on MongoDB metadata existence instead of local disk check to support remote storage
     const fileData = await dataCollection.findOne({ filename: fileName });
 
     if (!fileData) {
@@ -226,16 +424,19 @@ export const getFileMetadata = async (req, res) => {
       return res.status(404).json({ error: "File not found or metadata missing." });
     }
 
+    const isFolder = fileData.isFolder === true || fileData.isFolder === "true";
+
     return res.status(200).json({
       success: true,
       fileName,
       originalName: fileData.originalName || fileName,
       uploadTime: fileData.uploadTime,
       uploader: fileData.uploader,
-      fileSize: fileData.fileSize,
+      fileSize: fileData.fileSize || (isFolder ? "Directory" : "0 KB"),
       encryption: fileData.encryption,
-      apiLink: `${config.settings.domain}/cdn/${fileName}`,
-      viewLink: `${config.settings.domain}/view/${fileName}`
+      isFolder,
+      apiLink: isFolder ? `${config.settings.domain}/api/files/zip/${fileName}` : `${config.settings.domain}/cdn/${fileName}`,
+      viewLink: isFolder ? `${config.settings.domain}/dashboard?folder=${fileName}` : `${config.settings.domain}/view/${fileName}`
     });
   } catch (err) {
     log(`Metadata retrieval error: ${err.message}`, "error");
@@ -256,30 +457,27 @@ export const cdnFile = async (req, res) => {
 
     if (!fileData) {
       log(`File metadata not found for ${fileName} in DB.`, "warn");
-      return res.status(404).render("error", { errorMessage: "File metadata missing." });
+      return res.status(404).json({ error: "File metadata missing." });
     }
 
-    // 1. Download file buffer from active storage backend
     let fileBuffer;
     try {
       fileBuffer = await storage.getFile(fileName);
     } catch (storageErr) {
       log(`Storage retrieval error for ${fileName}: ${storageErr.message}`, "error");
-      return res.status(404).render("error", { errorMessage: "File could not be retrieved from storage backend." });
+      return res.status(404).json({ error: "File could not be retrieved from storage backend." });
     }
 
-    // 2. Decrypt in-memory if needed
     let outputBuffer = fileBuffer;
     if (fileData.encryption === "true") {
       try {
         outputBuffer = await decryptFile(fileName, fileBuffer);
       } catch (decryptErr) {
         log(`Decryption error for ${fileName}: ${decryptErr.message}`, "error");
-        return res.status(500).render("error", { errorMessage: "Error decrypting file." });
+        return res.status(500).json({ error: "Error decrypting file." });
       }
     }
 
-    // 3. Send file directly as a download stream
     res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(fileData.originalName || fileName)}"`);
     res.setHeader('Content-Type', 'application/octet-stream');
     res.send(outputBuffer);
@@ -287,12 +485,10 @@ export const cdnFile = async (req, res) => {
   } catch (err) {
     log(`CDN direct downloader error: ${err.message}`, "error");
     if (!res.headersSent) {
-      return res.status(500).render("error", { errorMessage: "Error occurred while fetching download." });
+      return res.status(500).json({ error: "Error occurred while fetching download." });
     }
   }
 };
-
-// Removed renderViewPage since Next.js viewer page uses the unified getFileMetadata API
 
 // Tiny helper to parse file extensions safely
 function pathExtension(filename) {

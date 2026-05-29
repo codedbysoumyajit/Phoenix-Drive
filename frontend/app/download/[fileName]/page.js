@@ -104,7 +104,7 @@ export default function DownloadPage({ params }) {
             marginBottom: "20px",
             boxShadow: "0 0 20px rgba(6, 182, 212, 0.15)"
           }}>
-            ⇩
+            {metadata.isFolder ? "🗂" : "⇩"}
           </div>
           
           <h2 style={{
@@ -118,7 +118,7 @@ export default function DownloadPage({ params }) {
             {metadata.originalName}
           </h2>
           <p style={{ color: "var(--text-secondary)", fontSize: "0.85rem", marginTop: "6px", fontWeight: "650", letterSpacing: "0.05em" }}>
-            TRANSMISSION GATEWAY ACTIVE
+            {metadata.isFolder ? "SECURE DIRECTORY PIPELINE ACTIVE" : "TRANSMISSION GATEWAY ACTIVE"}
           </p>
         </div>
 
@@ -134,8 +134,8 @@ export default function DownloadPage({ params }) {
           fontSize: "0.9rem"
         }}>
           <div style={{ display: "flex", justifyContent: "space-between" }}>
-            <span style={{ color: "var(--text-secondary)" }}>FILE SIZE</span>
-            <span style={{ color: "var(--text-primary)", fontWeight: "700" }}>{metadata.fileSize}</span>
+            <span style={{ color: "var(--text-secondary)" }}>{metadata.isFolder ? "ITEM TYPE" : "FILE SIZE"}</span>
+            <span style={{ color: "var(--text-primary)", fontWeight: "700" }}>{metadata.isFolder ? "Directory Archive" : metadata.fileSize}</span>
           </div>
           
           <div style={{ display: "flex", justifyContent: "space-between" }}>
@@ -148,20 +148,27 @@ export default function DownloadPage({ params }) {
             <span style={{ color: "var(--text-primary)", fontWeight: "700" }}>{metadata.uploader.toUpperCase()}</span>
           </div>
 
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span style={{ color: "var(--text-secondary)" }}>DECRYPT STATE</span>
-            {metadata.encryption === "true" ? (
-              <span className="badge-capsule badge-purple">AES Secured</span>
-            ) : (
-              <span className="badge-capsule badge-cyan">Raw Buffer</span>
-            )}
-          </div>
+          {metadata.isFolder ? (
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span style={{ color: "var(--text-secondary)" }}>PACKAGING</span>
+              <span className="badge-capsule badge-cyan">Auto ZIP Compression</span>
+            </div>
+          ) : (
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span style={{ color: "var(--text-secondary)" }}>DECRYPT STATE</span>
+              {metadata.encryption === "true" ? (
+                <span className="badge-capsule badge-purple">AES Secured</span>
+              ) : (
+                <span className="badge-capsule badge-cyan">Raw Buffer</span>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Action Buttons */}
         <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
           <a 
-            href={`/cdn/${metadata.fileName}`}
+            href={metadata.isFolder ? `/api/files/zip/${metadata.fileName}` : `/cdn/${metadata.fileName}`}
             className="btn-submit"
             style={{ 
               textDecoration: "none", 
@@ -169,19 +176,21 @@ export default function DownloadPage({ params }) {
               margin: "0"
             }}
           >
-            Download Payload
+            {metadata.isFolder ? "Download ZIP Archive" : "Download Payload"}
           </a>
 
-          <Link 
-            href={`/view/${metadata.fileName}`}
-            className="btn-action-cyan"
-            style={{ 
-              textDecoration: "none", 
-              textAlign: "center"
-            }}
-          >
-            Preview Media Asset
-          </Link>
+          {!metadata.isFolder && (
+            <Link 
+              href={`/view/${metadata.fileName}`}
+              className="btn-action-cyan"
+              style={{ 
+                textDecoration: "none", 
+                textAlign: "center"
+              }}
+            >
+              Preview Media Asset
+            </Link>
+          )}
         </div>
       </div>
     </div>
