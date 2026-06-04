@@ -18,6 +18,9 @@ import compression from "compression";
 const app = express();
 const server = createServer(app);
 
+server.requestTimeout = 0;
+server.headersTimeout = 0;
+
 // --- Configuration and Global Middleware ---
 app.use(compression()); // Optimize bandwidth and transfer speeds by Gzipping responses
 app.set("trust proxy", ["loopback", "linklocal", "uniquelocal"]);
@@ -45,7 +48,14 @@ app.use((req, res, next) => {
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-app.use(fileUpload()); // Make sure this middleware comes before routes that handle file uploads
+app.use(
+  fileUpload({
+    limits: { fileSize: 1024 * 1024 * 1024 },
+    abortOnLimit: true,
+    responseOnLimit: "Uploaded file is too large.",
+    createParentPath: false,
+  })
+); // Make sure this middleware comes before routes that handle file uploads
 app.use(cors());
 
 // Generate secret once when the application starts

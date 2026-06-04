@@ -10,6 +10,7 @@ export default function Navbar() {
   const [username, setUsername] = useState("");
   const [loading, setLoading] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [theme, setTheme] = useState("dark");
 
   useEffect(() => {
     fetch("/api/auth/session")
@@ -27,6 +28,12 @@ export default function Navbar() {
       });
   }, [pathname]);
 
+  // Sync theme status on load
+  useEffect(() => {
+    const activeTheme = document.documentElement.classList.contains("dark") ? "dark" : "light";
+    setTheme(activeTheme);
+  }, []);
+
   // Close dropdown on route transition
   useEffect(() => {
     setMenuOpen(false);
@@ -43,252 +50,185 @@ export default function Navbar() {
     }
   };
 
+  const toggleTheme = () => {
+    const nextTheme = theme === "dark" ? "light" : "dark";
+    if (nextTheme === "dark") {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+    localStorage.setItem("theme", nextTheme);
+    setTheme(nextTheme);
+  };
+
   const isAuthPage = pathname === "/login" || pathname === "/register";
   if (isAuthPage) return null;
 
+  const navLinks = [
+    { href: "/dashboard", label: "My Files" },
+    { href: "/upload", label: "Upload" },
+    { href: "/console", label: "Settings" },
+  ];
+
   return (
-    <header className="nav-bar-container" style={{ margin: "16px 16px 8px 16px" }}>
-      <div className="nav-bar-main">
-        {/* Brand logo & title */}
-        <div className="nav-brand" style={{ cursor: "pointer" }} onClick={() => router.push(username ? "/dashboard" : "/login")}>
-          <div className="nav-logo" style={{
-            width: "36px",
-            height: "36px",
-            background: "var(--gradient-cyber)",
-            borderRadius: "50%",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            boxShadow: "0 0 15px rgba(6, 182, 212, 0.45)",
-            flexShrink: 0
-          }}>
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 2L2 22h20L12 2zm0 3.99L18.47 19H5.53L12 5.99z" fill="white" />
-              <path d="M12 9l-4.5 7.5h9L12 9z" fill="rgba(255, 255, 255, 0.4)" />
-            </svg>
+    <header className="mx-4 mt-4 mb-2">
+      <div className="bg-white/75 dark:bg-slate-900/60 backdrop-blur-xl border border-slate-200/80 dark:border-white/10 rounded-2xl shadow-xl shadow-black/5 dark:shadow-black/20 overflow-hidden transition-all duration-300">
+        {/* Main bar */}
+        <div className="flex items-center justify-between px-4 py-3 sm:px-5 md:px-7 md:py-3.5">
+          {/* Brand Logo */}
+          <div
+            className="flex items-center gap-3 cursor-pointer shrink-0"
+            onClick={() => router.push(username ? "/dashboard" : "/login")}
+          >
+            <div className="w-9 h-9 bg-gradient-to-br from-cyan-500 to-blue-600 dark:to-purple-500 rounded-xl flex items-center justify-center shadow-lg shadow-cyan-500/25 shrink-0">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2L2 22h20L12 2zm0 3.99L18.47 19H5.53L12 5.99z" fill="white" />
+                <path d="M12 9l-4.5 7.5h9L12 9z" fill="rgba(255, 255, 255, 0.4)" />
+              </svg>
+            </div>
+            <h1 className="text-lg font-extrabold tracking-tight bg-gradient-to-r from-cyan-600 to-blue-600 dark:from-cyan-400 dark:to-purple-400 bg-clip-text text-transparent">
+              Phoenix XShare
+            </h1>
           </div>
-          <h1 className="nav-title text-gradient" style={{ fontSize: "1.35rem", fontWeight: "800", letterSpacing: "-0.02em" }}>
-            Phoenix XShare
-          </h1>
+
+          {/* Desktop Nav Links */}
+          {username && (
+            <nav className="hidden md:flex items-center gap-1">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 border ${
+                    pathname === link.href
+                      ? "text-cyan-600 dark:text-cyan-400 bg-cyan-500/[0.06] border-cyan-500/15 dark:border-cyan-500/25 shadow-sm"
+                      : "text-slate-600 dark:text-slate-400 border-transparent hover:text-slate-900 hover:bg-slate-100 hover:border-slate-200 dark:hover:text-white dark:hover:bg-white/[0.03] dark:hover:border-white/[0.05]"
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </nav>
+          )}
+
+          {/* User Controls & Theme Toggle */}
+          <div className="flex items-center gap-3">
+            {/* Theme Toggle Button */}
+            <button
+              onClick={toggleTheme}
+              className="p-2.5 rounded-xl border border-slate-200/80 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer shadow-sm shrink-0"
+              title="Toggle Light/Dark Theme"
+            >
+              {theme === "dark" ? (
+                // Sun Icon for dark theme (switches to light)
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m0 13.5V21M4.75 4.75l1.6 1.6m11.3 11.3l1.6 1.6M3 12h2.25m13.5 0H21M4.75 19.25l1.6-1.6m11.3-11.3l1.6-1.6M12 7.5a4.5 4.5 0 100 9 4.5 4.5 0 000-9z" />
+                </svg>
+              ) : (
+                // Moon Icon for light theme (switches to dark)
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" />
+                </svg>
+              )}
+            </button>
+
+            {/* Desktop User Section */}
+            {username ? (
+              <div className="hidden md:flex items-center gap-4">
+                <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 font-bold">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-sm" />
+                  <span>{username}</span>
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="px-4 py-2 text-sm font-bold text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-white/10 rounded-xl hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 transition-all duration-200 cursor-pointer"
+                >
+                  Sign Out
+                </button>
+              </div>
+            ) : (
+              !loading && (
+                <Link
+                  href="/login"
+                  className="hidden md:inline-flex px-5 py-2 text-sm font-bold text-cyan-600 dark:text-cyan-400 border border-cyan-500/30 rounded-xl hover:bg-cyan-500/5 dark:hover:bg-cyan-500/10 transition-all duration-200"
+                >
+                  Sign In
+                </Link>
+              )
+            )}
+
+            {/* Mobile Hamburger */}
+            {username && (
+              <button
+                className={`md:hidden flex flex-col justify-between w-[38px] h-[38px] rounded-xl p-[11px_9px] cursor-pointer outline-none transition-all duration-200 ${
+                  menuOpen
+                    ? "bg-slate-100 dark:bg-white/[0.08] border border-cyan-500/40"
+                    : "bg-transparent border border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/[0.08]"
+                }`}
+                onClick={() => setMenuOpen(!menuOpen)}
+                aria-label="Toggle Navigation Menu"
+              >
+                <span
+                  className="block w-full h-0.5 rounded-full transition-all duration-350"
+                  style={{
+                    backgroundColor: menuOpen ? "rgb(6, 182, 212)" : "currentColor",
+                    transform: menuOpen ? "translateY(5.5px) rotate(45deg)" : "none",
+                  }}
+                />
+                <span
+                  className="block w-full h-0.5 rounded-full transition-all duration-350"
+                  style={{
+                    backgroundColor: menuOpen ? "rgb(6, 182, 212)" : "currentColor",
+                    opacity: menuOpen ? 0 : 1,
+                  }}
+                />
+                <span
+                  className="block w-full h-0.5 rounded-full transition-all duration-350"
+                  style={{
+                    backgroundColor: menuOpen ? "rgb(6, 182, 212)" : "currentColor",
+                    transform: menuOpen ? "translateY(-6.5px) rotate(-45deg)" : "none",
+                  }}
+                />
+              </button>
+            )}
+          </div>
         </div>
 
-        {/* Desktop inline nav links */}
-        {username && (
-          <nav className="desktop-nav-links">
-            <Link href="/dashboard" className={`nav-item-link ${pathname === "/dashboard" ? "active" : ""}`}>
-              Vault Dashboard
-            </Link>
-            <Link href="/upload" className={`nav-item-link ${pathname === "/upload" ? "active" : ""}`}>
-              Upload Portal
-            </Link>
-            <Link href="/console" className={`nav-item-link ${pathname === "/console" ? "active" : ""}`}>
-              System Console
-            </Link>
-          </nav>
-        )}
+        {/* Mobile Dropdown */}
+        {username && menuOpen && (
+          <div className="md:hidden border-t border-slate-200/80 dark:border-white/10 bg-white/95 dark:bg-slate-950/40 px-5 pt-4 pb-5 flex flex-col gap-4 animate-slideDown">
+            <nav className="flex flex-col gap-2">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={`px-4 py-3 rounded-xl text-[0.95rem] font-bold transition-all duration-200 border ${
+                    pathname === link.href
+                      ? "text-cyan-600 dark:text-cyan-400 bg-cyan-500/10 dark:bg-cyan-500/[0.05] border-cyan-500/20 dark:border-cyan-500/20"
+                      : "text-slate-500 dark:text-slate-400 border-transparent hover:text-slate-900 hover:bg-slate-100 dark:hover:text-white dark:hover:bg-white/[0.02] dark:hover:border-white/10"
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </nav>
 
-        {/* Desktop Profile section */}
-        {username ? (
-          <div className="desktop-user-section">
-            <div className="nav-username">
-              <span className="glow-online-dot"></span>
-              <span>{username.toUpperCase()}</span>
+            <div className="border-t border-slate-200/80 dark:border-white/10 pt-4 flex items-center justify-between">
+              <div className="flex items-center gap-2.5 text-sm text-slate-600 dark:text-slate-300 font-bold">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-sm shadow-emerald-400/50" />
+                <span>{username}</span>
+              </div>
+              <button
+                onClick={handleLogout}
+                className="px-4 py-2 text-sm font-bold text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-white/10 rounded-xl hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 transition-all duration-200 cursor-pointer"
+              >
+                Sign Out
+              </button>
             </div>
-            <button onClick={handleLogout} className="btn-logout">
-              Log Out
-            </button>
           </div>
-        ) : (
-          !loading && (
-            <Link href="/login" className="desktop-user-section btn-logout" style={{ textDecoration: "none", textAlign: "center" }}>
-              Sign In
-            </Link>
-          )
-        )}
-
-        {/* Compact 3-Dot mobile menu button */}
-        {username && (
-          <button 
-            className={`mobile-menu-dots-btn ${menuOpen ? "open" : ""}`} 
-            onClick={() => setMenuOpen(!menuOpen)}
-            aria-label="Toggle Navigation Menu"
-          >
-            <div className="dot"></div>
-            <div className="dot"></div>
-            <div className="dot"></div>
-          </button>
         )}
       </div>
 
-      {/* Mobile Drawer Dropdown list */}
-      {username && menuOpen && (
-        <div className="mobile-nav-dropdown animate-slide-down">
-          <nav className="mobile-links-stack">
-            <Link href="/dashboard" className={`mobile-nav-item ${pathname === "/dashboard" ? "active" : ""}`}>
-              Vault Dashboard
-            </Link>
-            <Link href="/upload" className={`mobile-nav-item ${pathname === "/upload" ? "active" : ""}`}>
-              Upload Portal
-            </Link>
-            <Link href="/console" className={`mobile-nav-item ${pathname === "/console" ? "active" : ""}`}>
-              System Console
-            </Link>
-          </nav>
-          
-          <div className="mobile-profile-section">
-            <div className="nav-username">
-              <span className="glow-online-dot"></span>
-              <span>{username.toUpperCase()}</span>
-            </div>
-            <button onClick={handleLogout} className="btn-logout" style={{ width: "auto", padding: "8px 16px" }}>
-              Log Out
-            </button>
-          </div>
-        </div>
-      )}
-
-      <style dangerouslySetInnerHTML={{__html: `
-        .nav-bar-container {
-          background: var(--bg-surface);
-          backdrop-filter: blur(24px);
-          -webkit-backdrop-filter: blur(24px);
-          border: 1px solid var(--border-color);
-          border-radius: var(--radius-lg);
-          box-shadow: var(--shadow-card);
-          overflow: hidden;
-          transition: var(--transition-smooth);
-        }
-
-        .nav-bar-main {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 16px 28px;
-        }
-
-        /* Nav links styles */
-        .desktop-nav-links {
-          display: flex;
-          gap: 6px;
-        }
-
-        .nav-item-link {
-          padding: 8px 16px;
-          border-radius: var(--radius-sm);
-          color: var(--text-secondary);
-          font-family: var(--font-heading);
-          font-weight: 600;
-          font-size: 0.88rem;
-          text-decoration: none;
-          transition: var(--transition-fast);
-          border: 1px solid transparent;
-        }
-
-        .nav-item-link:hover {
-          color: var(--text-primary);
-          background: rgba(255, 255, 255, 0.03);
-          border-color: rgba(255, 255, 255, 0.05);
-        }
-
-        .nav-item-link.active {
-          color: var(--accent-cyan);
-          background: rgba(6, 182, 212, 0.06);
-          border-color: rgba(6, 182, 212, 0.25);
-          box-shadow: 0 0 12px rgba(6, 182, 212, 0.03);
-        }
-
-        .desktop-user-section {
-          display: flex;
-          align-items: center;
-          gap: 20px;
-        }
-
-        /* Compact 3-Dot Button Styles */
-        .mobile-menu-dots-btn {
-          display: none;
-          flex-direction: column;
-          gap: 3.5px;
-          background: rgba(255, 255, 255, 0.04);
-          border: 1px solid var(--border-color);
-          border-radius: 10px;
-          padding: 12px;
-          cursor: pointer;
-          align-items: center;
-          justify-content: center;
-          transition: var(--transition-fast);
-          outline: none;
-        }
-
-        .mobile-menu-dots-btn:hover, .mobile-menu-dots-btn.open {
-          background: rgba(255, 255, 255, 0.08);
-          border-color: rgba(6, 182, 212, 0.4);
-        }
-
-        .mobile-menu-dots-btn .dot {
-          width: 4px;
-          height: 4px;
-          border-radius: 50%;
-          background-color: var(--text-primary);
-          transition: var(--transition-fast);
-        }
-
-        .mobile-menu-dots-btn:hover .dot, .mobile-menu-dots-btn.open .dot {
-          background-color: var(--accent-cyan);
-          box-shadow: 0 0 8px var(--accent-cyan);
-        }
-
-        /* Mobile Dropdown styles */
-        .mobile-nav-dropdown {
-          border-top: 1px solid var(--border-color);
-          background: rgba(9, 13, 22, 0.4);
-          padding: 16px 20px 20px 20px;
-          display: flex;
-          flex-direction: column;
-          gap: 16px;
-        }
-
-        .mobile-links-stack {
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-        }
-
-        .mobile-nav-item {
-          padding: 12px 16px;
-          border-radius: var(--radius-md);
-          color: var(--text-secondary);
-          font-family: var(--font-heading);
-          font-weight: 600;
-          font-size: 0.95rem;
-          text-decoration: none;
-          transition: var(--transition-fast);
-          border: 1px solid transparent;
-        }
-
-        .mobile-nav-item:hover {
-          color: var(--text-primary);
-          background: rgba(255, 255, 255, 0.02);
-          border-color: var(--border-color);
-        }
-
-        .mobile-nav-item.active {
-          color: var(--accent-cyan);
-          background: rgba(6, 182, 212, 0.05);
-          border-color: rgba(6, 182, 212, 0.2);
-        }
-
-        .mobile-profile-section {
-          border-top: 1px solid var(--border-color);
-          padding-top: 16px;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-        }
-
-        .animate-slide-down {
-          animation: slideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-
+      <style dangerouslySetInnerHTML={{ __html: `
         @keyframes slideDown {
           from {
             opacity: 0;
@@ -299,22 +239,8 @@ export default function Navbar() {
             transform: translateY(0);
           }
         }
-
-        /* Responsive overrides */
-        @media (max-width: 900px) {
-          .desktop-nav-links, .desktop-user-section {
-            display: none !important;
-          }
-
-          .mobile-menu-dots-btn {
-            display: flex !important;
-          }
-        }
-
-        @media (max-width: 640px) {
-          .nav-bar-main {
-            padding: 12px 18px;
-          }
+        .animate-slideDown {
+          animation: slideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
       `}} />
     </header>

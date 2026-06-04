@@ -1,5 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  experimental: {
+    proxyClientMaxBodySize: "1gb",
+    proxyTimeout: 600000,
+  },
+
   async rewrites() {
     return [
       {

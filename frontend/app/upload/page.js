@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 
 function UploadDashboardContent() {
   const router = useRouter();
@@ -48,7 +49,7 @@ function UploadDashboardContent() {
         setEncryptionEnabled(data.encryptionEnabled);
       }
     } catch (err) {
-      showToast("Failed to fetch node session details.", "error");
+      showToast("Failed to fetch session details.", "error");
     } finally {
       setLoading(false);
     }
@@ -91,7 +92,7 @@ function UploadDashboardContent() {
   const triggerUpload = async () => {
     if (selectedFiles.length === 0) return;
     setUploading(true);
-    setUploadProgress(10);
+    setUploadProgress(15);
 
     const formData = new FormData();
     selectedFiles.forEach((file) => {
@@ -102,13 +103,13 @@ function UploadDashboardContent() {
     formData.append("parentFolder", currentFolder);
 
     try {
-      setUploadProgress(30);
+      setUploadProgress(40);
       const res = await fetch("/api/files/upload", {
         method: "POST",
         body: formData,
       });
 
-      setUploadProgress(70);
+      setUploadProgress(80);
       const data = await res.json();
       if (!res.ok) {
         throw new Error(data.error || "File upload failed.");
@@ -134,138 +135,117 @@ function UploadDashboardContent() {
 
   if (loading) {
     return (
-      <div className="container-center" style={{ minHeight: "100vh" }}>
-        <div style={{ textAlign: "center" }}>
-          <div className="loader-spinner" />
-          <p style={{ marginTop: "16px", color: "var(--text-secondary)", letterSpacing: "0.05em" }}>CONNECTING TRANSMISSION MATRIX...</p>
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-[#0c0f17]">
+        <div className="text-center">
+          <div className="w-11 h-11 border-2 border-cyan-500/15 border-t-cyan-500 rounded-full animate-spin mx-auto" />
+          <p className="mt-4 text-slate-500 dark:text-slate-400 text-sm font-semibold">Loading upload tools...</p>
         </div>
-        <style dangerouslySetInnerHTML={{__html: `
-          .loader-spinner {
-            width: 44px;
-            height: 44px;
-            border: 2px solid rgba(6, 182, 212, 0.1);
-            border-top-color: var(--accent-cyan);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-          }
-          @keyframes spin {
-            to { transform: rotate(360deg); }
-          }
-        `}} />
       </div>
     );
   }
 
   return (
-    <div style={{ minHeight: "80vh", display: "flex", flexDirection: "column" }} className="animate-entrance">
-      {/* Main Structural Container */}
-      <main className="dashboard-container" style={{ maxWidth: "800px" }}>
+    <div className="min-h-[80vh] flex flex-col animate-fade-in-up">
+      {/* Main Container */}
+      <main className="max-w-3xl mx-auto w-full px-4 py-6 md:px-6">
         
         {/* Upload Panel Card */}
-        <section className="panel-card" style={{ padding: "40px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px" }}>
+        <section className="bg-white dark:bg-slate-900/40 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-3xl p-6 md:p-10 shadow-xl shadow-black/[0.03] dark:shadow-black/20">
+          <Link 
+            href={`/dashboard?folder=${currentFolder}`}
+            className="inline-flex items-center gap-2 text-slate-500 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400 text-sm font-bold mb-6 transition-all duration-200 cursor-pointer"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="19" y1="12" x2="5" y2="12"></line>
+              <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            ← Back to My Files
+          </Link>
+
+          <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
             <div>
-              <h2 style={{ fontSize: "1.85rem", fontWeight: "800" }}>Transmit Assets</h2>
-              <p style={{ color: "var(--text-secondary)", fontSize: "0.95rem" }}>
-                Active Target Directory: <span style={{ color: "var(--accent-cyan)", fontWeight: "bold" }}>{currentFolder === "root" ? "ROOT" : currentFolder.split('-')[1]?.toUpperCase() || "SUBFOLDER"}</span>
+              <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-white">Upload Files</h2>
+              <p className="text-slate-500 dark:text-slate-400 text-sm mt-1.5 font-medium">
+                Target Folder: <span className="text-cyan-600 dark:text-cyan-400 font-bold">{currentFolder === "root" ? "Home" : currentFolder.split('-')[1] || "Subfolder"}</span>
               </p>
             </div>
             
-            {/* Encryption Switch */}
-            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-              <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)", fontWeight: "700", letterSpacing: "0.05em" }}>
-                AUTO ENCRYPTION
+            {/* Encryption Toggle */}
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider pl-1">
+                Encryption
               </span>
               <button 
                 onClick={() => encryptToggleAllowed && setEncryptionEnabled(!encryptionEnabled)}
                 disabled={!encryptToggleAllowed}
-                style={{
-                  width: "52px",
-                  height: "28px",
-                  borderRadius: "15px",
-                  backgroundColor: encryptionEnabled ? "rgba(6, 182, 212, 0.15)" : "rgba(255,255,255,0.02)",
-                  border: `1px solid ${encryptionEnabled ? "var(--accent-cyan)" : "var(--border-color)"}`,
-                  position: "relative",
-                  cursor: encryptToggleAllowed ? "pointer" : "not-allowed",
-                  padding: "0",
-                  transition: "var(--transition-fast)"
-                }}
+                className={`relative w-[52px] h-7 rounded-full border p-0 transition-all duration-200 ${
+                  encryptionEnabled 
+                    ? 'bg-cyan-500/15 border-cyan-500' 
+                    : 'bg-slate-200 dark:bg-white/5 border-slate-350 dark:border-white/10'
+                } ${encryptToggleAllowed ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'}`}
               >
-                <div style={{
-                  width: "20px",
-                  height: "20px",
-                  borderRadius: "50%",
-                  backgroundColor: encryptionEnabled ? "var(--accent-cyan)" : "var(--text-muted)",
-                  position: "absolute",
-                  top: "3px",
-                  left: encryptionEnabled ? "27px" : "3px",
-                  transition: "left var(--transition-smooth)",
-                  boxShadow: encryptionEnabled ? "0 0 12px var(--accent-cyan)" : "none"
-                }} />
+                <div className={`absolute top-[3px] w-5 h-5 rounded-full transition-all duration-300 ${
+                  encryptionEnabled 
+                    ? 'left-[27px] bg-cyan-500 shadow-[0_0_12px_theme(colors.cyan.500)]' 
+                    : 'left-[3px] bg-slate-400 dark:bg-slate-600'
+                }`} />
               </button>
             </div>
           </div>
 
           {/* Upload Drop Zone */}
           <div
-            className={`upload-dropzone ${isDragging ? "dragging" : ""}`}
+            className={`border-2 border-dashed rounded-2xl text-center cursor-pointer transition-all duration-200 py-16 px-6 ${
+              isDragging 
+                ? 'border-cyan-500 bg-cyan-500/5' 
+                : 'border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 bg-slate-50/50 dark:bg-white/[0.02]'
+            }`}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
             onClick={() => fileInputRef.current?.click()}
-            style={{ padding: "64px 24px" }}
           >
             <input
               type="file"
               ref={fileInputRef}
               onChange={handleFileChange}
               multiple
-              style={{ display: "none" }}
+              className="hidden"
             />
             
-            <div className="upload-arrow" style={{ fontSize: "3.5rem", marginBottom: "16px" }}>⇪</div>
+            <div className="text-4xl mb-4 text-slate-400 dark:text-slate-500">
+              <svg className="w-12 h-12 mx-auto text-slate-400 dark:text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+              </svg>
+            </div>
             
-            <h3 style={{ fontSize: "1.35rem", fontWeight: "800", marginBottom: "4px" }}>
-              Drag & Drop files here or <span style={{ color: "var(--accent-cyan)", textDecoration: "underline" }}>browse</span>
+            <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-1">
+              Drop files here or <span className="text-cyan-600 dark:text-cyan-400 underline">browse</span>
             </h3>
-            <p style={{ color: "var(--text-secondary)", fontSize: "0.92rem", fontWeight: "400" }}>
-              Local client-side cryptography locks files before upload
+            <p className="text-slate-500 dark:text-slate-400 text-sm font-semibold">
+              Files are securely encrypted on the server-side
             </p>
           </div>
 
-          {/* Selected Files Queue list */}
+          {/* Selected Files Queue */}
           {selectedFiles.length > 0 && (
-            <div className="queue-container" style={{ marginTop: "12px" }}>
-              <h4 style={{ fontSize: "0.9rem", fontWeight: "700", color: "var(--text-secondary)", letterSpacing: "0.05em" }}>
-                TRANSMISSION QUEUE ({selectedFiles.length})
+            <div className="mt-6 animate-fade-in-up">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3 pl-1">
+                Selected Files ({selectedFiles.length})
               </h4>
-              <div className="queue-scroll">
+              <div className="max-h-48 overflow-y-auto space-y-2 mb-4 scrollbar-thin">
                 {selectedFiles.map((file, i) => (
-                  <div key={i} className="queue-row">
-                    <span style={{
-                      maxWidth: "70%",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
-                      fontWeight: "500"
-                    }}>
+                  <div key={i} className="flex items-center justify-between bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/5 rounded-2xl px-4 py-2.5 hover:border-slate-300 dark:hover:border-white/10 transition-all duration-200">
+                    <span className="max-w-[70%] overflow-hidden text-ellipsis whitespace-nowrap font-bold text-slate-700 dark:text-white text-sm">
                       {file.name}
                     </span>
-                    <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-                      <span style={{ color: "var(--text-secondary)", fontSize: "0.85rem" }}>
+                    <div className="flex items-center gap-4">
+                      <span className="text-slate-500 dark:text-slate-400 text-xs font-bold">
                         {(file.size / (1024 * 1024)).toFixed(2)} MB
                       </span>
                       <button 
                         onClick={(e) => { e.stopPropagation(); removeSelectedFile(i); }}
-                        style={{
-                          background: "none",
-                          border: "none",
-                          color: "var(--accent-rose)",
-                          cursor: "pointer",
-                          fontWeight: "bold",
-                          fontSize: "1.3rem",
-                          lineHeight: "1"
-                        }}
+                        className="bg-transparent border-none text-rose-500 hover:text-rose-600 cursor-pointer font-bold text-xl leading-none transition-all duration-200 p-1"
                       >
                         ×
                       </button>
@@ -274,39 +254,29 @@ function UploadDashboardContent() {
                 ))}
               </div>
 
-              {/* Progress and Confirm button */}
-              <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+              {/* Progress and Upload button */}
+              <div className="flex flex-col gap-3.5 border-t border-slate-250 dark:border-white/5 pt-4">
                 {uploading && (
-                  <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem", color: "var(--accent-cyan)", fontWeight: "700" }}>
-                      <span>PREPARING DATA TRANSMISSION FLOW...</span>
+                  <div className="flex flex-col gap-2">
+                    <div className="flex justify-between text-xs text-cyan-600 dark:text-cyan-400 font-bold">
+                      <span>Uploading files...</span>
                       <span>{uploadProgress}%</span>
                     </div>
-                    <div style={{
-                      width: "100%",
-                      height: "8px",
-                      backgroundColor: "rgba(255,255,255,0.02)",
-                      borderRadius: "4px",
-                      overflow: "hidden",
-                      border: "1px solid var(--border-color)"
-                    }}>
-                      <div style={{
-                        width: `${uploadProgress}%`,
-                        height: "100%",
-                        backgroundColor: "var(--accent-cyan)",
-                        boxShadow: "0 0 15px var(--accent-cyan)",
-                        transition: "width 0.2s cubic-bezier(0.4, 0, 0.2, 1)"
-                      }} />
+                    <div className="w-full h-2 bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden border border-slate-200 dark:border-white/10">
+                      <div 
+                        className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 shadow-[0_0_15px_theme(colors.cyan.500)] transition-all duration-200 ease-out rounded-full"
+                        style={{ width: `${uploadProgress}%` }}
+                      />
                     </div>
                   </div>
                 )}
 
                 <button 
                   onClick={triggerUpload} 
-                  className="btn-submit" 
                   disabled={uploading}
+                  className="w-full py-4 bg-gradient-to-r from-cyan-500 to-blue-600 hover:brightness-110 text-white font-bold rounded-2xl shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm tracking-wide cursor-pointer"
                 >
-                  {uploading ? "TRANSMITTING..." : `CONFIRM SECURE TRANSMISSION (${selectedFiles.length} FILES)`}
+                  {uploading ? "Uploading..." : `Upload ${selectedFiles.length} File${selectedFiles.length !== 1 ? 's' : ''}`}
                 </button>
               </div>
             </div>
@@ -314,10 +284,14 @@ function UploadDashboardContent() {
         </section>
       </main>
 
-      {/* Floating Success/Error Alert toast */}
+      {/* Toast Notification */}
       {toast.show && (
-        <div className={`toast-premium ${toast.type === "success" ? "toast-success" : "toast-error"}`}>
-          <span style={{ fontSize: "0.95rem", fontWeight: "650", letterSpacing: "0.03em" }}>
+        <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 px-5 py-3 rounded-xl shadow-2xl z-50 border backdrop-blur-md transition-all duration-300 ${
+          toast.type === "success" 
+            ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400' 
+            : 'bg-rose-500/10 border-rose-500/20 text-rose-600 dark:text-rose-400'
+        }`}>
+          <span className="text-xs font-extrabold tracking-wider">
             {toast.message.toUpperCase()}
           </span>
         </div>
@@ -330,22 +304,11 @@ function UploadDashboardContent() {
 export default function UploadPage() {
   return (
     <Suspense fallback={
-      <div className="container-center" style={{ minHeight: "100vh" }}>
-        <div style={{ textAlign: "center" }}>
-          <div style={{
-            width: "44px",
-            height: "44px",
-            border: "2px solid rgba(6, 182, 212, 0.1)",
-            borderTopColor: "var(--accent-cyan)",
-            borderRadius: "50%",
-            animation: "spin 0.8s linear infinite",
-            display: "inline-block"
-          }} />
-          <p style={{ marginTop: "16px", color: "var(--text-secondary)", letterSpacing: "0.05em" }}>CONNECTING TRANSMISSION MATRIX...</p>
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-[#0c0f17]">
+        <div className="text-center">
+          <div className="w-11 h-11 border-2 border-cyan-500/15 border-t-cyan-500 rounded-full animate-spin inline-block" />
+          <p className="mt-4 text-slate-500 dark:text-slate-400 text-sm font-semibold">Loading upload tools...</p>
         </div>
-        <style dangerouslySetInnerHTML={{__html: `
-          @keyframes spin { to { transform: rotate(360deg); } }
-        `}} />
       </div>
     }>
       <UploadDashboardContent />

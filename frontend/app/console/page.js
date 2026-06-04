@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export default function SystemConsole() {
   const [username, setUsername] = useState("");
@@ -52,151 +53,114 @@ export default function SystemConsole() {
 
   if (loading) {
     return (
-      <div className="container-center" style={{ minHeight: "100vh" }}>
-        <div style={{ textAlign: "center" }}>
-          <div className="loader-spinner" />
-          <p style={{ marginTop: "16px", color: "var(--text-secondary)", letterSpacing: "0.05em" }}>LOADING DIAGNOSTICS...</p>
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-[#0c0f17]">
+        <div className="text-center">
+          <div className="w-11 h-11 border-2 border-cyan-500/15 border-t-cyan-500 rounded-full animate-spin mx-auto" />
+          <p className="mt-4 text-slate-500 dark:text-slate-400 text-sm font-semibold">Loading console settings...</p>
         </div>
-        <style dangerouslySetInnerHTML={{__html: `
-          .loader-spinner {
-            width: 44px;
-            height: 44px;
-            border: 2px solid rgba(6, 182, 212, 0.1);
-            border-top-color: var(--accent-cyan);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-          }
-          @keyframes spin {
-            to { transform: rotate(360deg); }
-          }
-        `}} />
       </div>
     );
   }
 
   return (
-    <div style={{ minHeight: "80vh", display: "flex", flexDirection: "column" }} className="animate-entrance">
-      <main className="dashboard-container" style={{ maxWidth: "900px" }}>
+    <div className="min-h-[80vh] flex flex-col animate-fade-in-up">
+      <main className="max-w-3xl mx-auto w-full px-4 py-6 md:px-6">
         
-        {/* Diagnostics Card */}
-        <section className="panel-card" style={{ padding: "40px" }}>
-          <div style={{ marginBottom: "8px" }}>
-            <h2 style={{ fontSize: "1.85rem", fontWeight: "800" }}>System Console</h2>
-            <p style={{ color: "var(--text-secondary)", fontSize: "0.95rem" }}>
-              Active diagnostics and cryptography settings for the local node
+        {/* Settings Card */}
+        <section className="bg-white dark:bg-slate-900/40 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-3xl p-6 md:p-10 shadow-xl shadow-black/[0.03] dark:shadow-black/20">
+          <Link 
+            href="/dashboard"
+            className="inline-flex items-center gap-2 text-slate-500 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400 text-sm font-bold mb-6 transition-all duration-200 cursor-pointer"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="19" y1="12" x2="5" y2="12"></line>
+              <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            ← Back to My Files
+          </Link>
+
+          <div className="mb-6">
+            <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-white">Settings</h2>
+            <p className="text-slate-500 dark:text-slate-400 text-sm mt-1.5 font-medium">
+              System information and configuration status
             </p>
           </div>
 
-          {/* Grid layout of status indicators */}
-          <div style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-            gap: "20px",
-            marginTop: "12px"
-          }}>
-            <div style={{
-              background: "rgba(255,255,255,0.01)",
-              border: "1px solid var(--border-color)",
-              borderRadius: "var(--radius-md)",
-              padding: "20px",
-              display: "flex",
-              flexDirection: "column",
-              gap: "12px"
-            }}>
-              <span style={{ fontSize: "0.78rem", color: "var(--text-secondary)", fontWeight: "700", letterSpacing: "0.05em" }}>DATABASE NODE</span>
-              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                <span className="glow-online-dot"></span>
-                <span style={{ fontSize: "1.1rem", fontWeight: "750" }}>MONGODB ONLINE</span>
+          {/* Status Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+            {/* Database */}
+            <div className="bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 rounded-2xl p-5 flex flex-col gap-3 hover:border-slate-350 dark:hover:border-white/20 transition-all duration-300 shadow-sm dark:shadow-none">
+              <span className="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">Database</span>
+              <div className="flex items-center gap-2.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_10px_theme(colors.emerald.500)]" />
+                <span className="text-sm font-extrabold text-slate-800 dark:text-white">Online</span>
               </div>
             </div>
 
-            <div style={{
-              background: "rgba(255,255,255,0.01)",
-              border: "1px solid var(--border-color)",
-              borderRadius: "var(--radius-md)",
-              padding: "20px",
-              display: "flex",
-              flexDirection: "column",
-              gap: "12px"
-            }}>
-              <span style={{ fontSize: "0.78rem", color: "var(--text-secondary)", fontWeight: "700", letterSpacing: "0.05em" }}>CRYPT INTERFACE</span>
-              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                <span className="glow-online-dot" style={{ backgroundColor: "var(--accent-magenta)", boxShadow: "0 0 10px var(--accent-magenta)" }}></span>
-                <span style={{ fontSize: "1.1rem", fontWeight: "750" }}>AES-256 ACTIVE</span>
+            {/* Encryption */}
+            <div className="bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 rounded-2xl p-5 flex flex-col gap-3 hover:border-slate-350 dark:hover:border-white/20 transition-all duration-300 shadow-sm dark:shadow-none">
+              <span className="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">Encryption</span>
+              <div className="flex items-center gap-2.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-purple-500 shadow-[0_0_10px_theme(colors.purple.500)]" />
+                <span className="text-sm font-extrabold text-slate-800 dark:text-white">AES-256 Active</span>
               </div>
             </div>
 
-            <div style={{
-              background: "rgba(255,255,255,0.01)",
-              border: "1px solid var(--border-color)",
-              borderRadius: "var(--radius-md)",
-              padding: "20px",
-              display: "flex",
-              flexDirection: "column",
-              gap: "12px"
-            }}>
-              <span style={{ fontSize: "0.78rem", color: "var(--text-secondary)", fontWeight: "700", letterSpacing: "0.05em" }}>ACTIVE STORAGE</span>
-              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                <span className="glow-online-dot" style={{ backgroundColor: "var(--accent-cyan)", boxShadow: "0 0 10px var(--accent-cyan)" }}></span>
-                <span style={{ fontSize: "1.1rem", fontWeight: "750" }}>LOCAL DISK</span>
+            {/* Storage */}
+            <div className="bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 rounded-2xl p-5 flex flex-col gap-3 hover:border-slate-350 dark:hover:border-white/20 transition-all duration-300 shadow-sm dark:shadow-none">
+              <span className="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">Storage</span>
+              <div className="flex items-center gap-2.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-cyan-500 shadow-[0_0_10px_theme(colors.cyan.500)]" />
+                <span className="text-sm font-extrabold text-slate-800 dark:text-white">Local Link</span>
               </div>
             </div>
           </div>
 
-          {/* Config Specs list */}
-          <div style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "16px",
-            borderTop: "1px solid var(--border-color)",
-            paddingTop: "28px",
-            marginTop: "12px"
-          }}>
-            <h3 style={{ fontSize: "1.15rem", fontWeight: "750", color: "var(--text-primary)" }}>Node Specifications</h3>
+          {/* Specs Table */}
+          <div className="border-t border-slate-200 dark:border-white/10 pt-6">
+            <h3 className="text-base font-extrabold text-slate-900 dark:text-white mb-4">Details</h3>
             
-            <div style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: "12px",
-              background: "rgba(0,0,0,0.15)",
-              border: "1px solid var(--border-color)",
-              borderRadius: "var(--radius-md)",
-              padding: "20px",
-              fontSize: "0.95rem"
-            }}>
-              <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid rgba(255,255,255,0.03)", paddingBottom: "10px" }}>
-                <span style={{ color: "var(--text-secondary)" }}>AUTHORIZED OPERATIVE</span>
-                <span style={{ fontWeight: "700" }}>{username.toUpperCase()}</span>
+            <div className="bg-slate-50 dark:bg-black/15 border border-slate-200 dark:border-white/10 rounded-2xl overflow-hidden shadow-inner dark:shadow-none">
+              <div className="flex flex-col gap-1 px-5 py-3.5 border-b border-slate-200 dark:border-white/5 sm:flex-row sm:items-center sm:justify-between">
+                <span className="text-slate-500 dark:text-slate-400 text-sm font-semibold">Username</span>
+                <span className="text-slate-900 dark:text-white font-bold text-sm break-words sm:text-right">{username}</span>
               </div>
-              <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid rgba(255,255,255,0.03)", paddingBottom: "10px" }}>
-                <span style={{ color: "var(--text-secondary)" }}>NODE DOMAIN GATEWAY</span>
-                <span style={{ fontWeight: "700", color: "var(--accent-cyan)", fontFamily: "monospace" }}>{domain}</span>
+              <div className="flex flex-col gap-1 px-5 py-3.5 border-b border-slate-200 dark:border-white/5 sm:flex-row sm:items-center sm:justify-between">
+                <span className="text-slate-500 dark:text-slate-400 text-sm font-semibold">Domain</span>
+                <span className="text-cyan-600 dark:text-cyan-400 font-bold text-sm font-mono break-all sm:text-right">{domain}</span>
               </div>
-              <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid rgba(255,255,255,0.03)", paddingBottom: "10px" }}>
-                <span style={{ color: "var(--text-secondary)" }}>CIPHER CONFIGURATION</span>
-                <span style={{ fontWeight: "700" }}>{encryptionEnabled ? "AES-256-GCM LOCAL-DECRYPT" : "RAW RAW-STREAM"}</span>
+              <div className="flex flex-col gap-1 px-5 py-3.5 border-b border-slate-200 dark:border-white/5 sm:flex-row sm:items-center sm:justify-between">
+                <span className="text-slate-500 dark:text-slate-400 text-sm font-semibold">Encryption type</span>
+                <span className="text-slate-900 dark:text-white font-bold text-sm break-words sm:text-right">{encryptionEnabled ? "AES-256-GCM" : "None"}</span>
               </div>
-              <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid rgba(255,255,255,0.03)", paddingBottom: "10px" }}>
-                <span style={{ color: "var(--text-secondary)" }}>PWA REGISTER SCOPE</span>
-                <span style={{ fontWeight: "700", color: "var(--accent-magenta)" }}>127.0.0.1:3000/</span>
+              <div className="flex flex-col gap-1 px-5 py-3.5 border-b border-slate-200 dark:border-white/5 sm:flex-row sm:items-center sm:justify-between">
+                <span className="text-slate-500 dark:text-slate-400 text-sm font-semibold">PWA Context</span>
+                <span className="text-purple-600 dark:text-purple-400 font-bold text-sm break-all sm:text-right">127.0.0.1:3000/</span>
               </div>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span style={{ color: "var(--text-secondary)" }}>NODE STATUS</span>
-                <span style={{ fontWeight: "700", color: "var(--accent-emerald)" }}>TRANSMITTING STABLE</span>
+              <div className="flex flex-col gap-1 px-5 py-3.5 sm:flex-row sm:items-center sm:justify-between">
+                <span className="text-slate-500 dark:text-slate-400 text-sm font-semibold">Status</span>
+                <span className="text-emerald-600 dark:text-emerald-400 font-bold text-sm break-words sm:text-right">Active Node</span>
               </div>
             </div>
           </div>
 
-          <button onClick={() => showToast("SYSTEM CONFIGURATIONS LOCK-ENGAGED", "success")} className="btn-submit" style={{ marginTop: "12px" }}>
-            Re-Key Cryptography Nodes
+          <button 
+            onClick={() => showToast("Settings refreshed successfully", "success")} 
+            className="w-full mt-6 py-3.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:brightness-110 text-white font-bold rounded-2xl transition-all shadow-md active:scale-[0.98] text-sm cursor-pointer"
+          >
+            Refresh Configuration
           </button>
         </section>
       </main>
 
-      {/* Floating Success/Error Alert toast */}
+      {/* Toast Notification */}
       {toast.show && (
-        <div className={`toast-premium ${toast.type === "success" ? "toast-success" : "toast-error"}`}>
-          <span style={{ fontSize: "0.95rem", fontWeight: "650", letterSpacing: "0.03em" }}>
+        <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 px-5 py-3 rounded-xl shadow-2xl z-50 border backdrop-blur-md transition-all duration-300 ${
+          toast.type === "success" 
+            ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400' 
+            : 'bg-rose-500/10 border-rose-500/20 text-rose-600 dark:text-rose-400'
+        }`}>
+          <span className="text-xs font-extrabold tracking-wider">
             {toast.message.toUpperCase()}
           </span>
         </div>

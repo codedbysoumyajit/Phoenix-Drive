@@ -14,6 +14,52 @@ import {
   purgeFile,
 } from "../utils/helpers.js";
 
+const STORAGE_BAR_CAP_BYTES = 1024 * 1024 * 1024;
+
+const parseStoredFileSizeToBytes = (fileDoc) => {
+  if (typeof fileDoc.fileSizeBytes === "number" && Number.isFinite(fileDoc.fileSizeBytes)) {
+    return fileDoc.fileSizeBytes;
+  }
+
+  if (!fileDoc.fileSize || typeof fileDoc.fileSize !== "string") {
+    return 0;
+  }
+
+  const match = fileDoc.fileSize.trim().match(/^([\d.]+)\s*(KB|MB|GB)$/i);
+  if (!match) {
+    return 0;
+  }
+
+  const value = Number.parseFloat(match[1]);
+  if (!Number.isFinite(value)) {
+    return 0;
+  }
+
+  const unit = match[2].toUpperCase();
+  if (unit === "KB") return value * 1024;
+  if (unit === "MB") return value * 1024 * 1024;
+  if (unit === "GB") return value * 1024 * 1024 * 1024;
+
+  return 0;
+};
+
+const formatStorageFootprint = (bytes) => {
+  if (!Number.isFinite(bytes) || bytes <= 0) {
+    return "0 KB";
+  }
+
+  const megabytes = bytes / (1024 * 1024);
+  if (megabytes < 1) {
+    return `${(bytes / 1024).toFixed(1)} KB`;
+  }
+
+  if (megabytes < 1024) {
+    return `${megabytes.toFixed(1)} MB`;
+  }
+
+  return `${(megabytes / 1024).toFixed(1)} GB`;
+};
+
 /**
  * Returns all files and folders uploaded by the authenticated user in the active folder as JSON.
  */
@@ -29,6 +75,21 @@ export const getUserFiles = async (req, res) => {
       uploader: username, 
       parentFolder: parentFolder 
     }).sort({ isFolder: -1, _id: -1 }).toArray();
+
+    const userDriveFiles = await dataCollection.find({
+      uploader: username,
+      isFolder: false,
+    }).toArray();
+
+    const totalDriveStorageBytes = userDriveFiles.reduce(
+      (total, fileDoc) => total + parseStoredFileSizeToBytes(fileDoc),
+      0,
+    );
+
+    const totalDriveFilesCount = userDriveFiles.length;
+    const storageUsagePercent = totalDriveStorageBytes > 0
+      ? Math.min(100, (totalDriveStorageBytes / STORAGE_BAR_CAP_BYTES) * 100)
+      : 0;
 
     // Helper to recursively fetch parent names for breadcrumbs
     const getBreadcrumbs = async (folderName, user, coll) => {
@@ -57,6 +118,13 @@ export const getUserFiles = async (req, res) => {
       currentFolder: parentFolder,
       encryptionEnabled: config.settings.encryption,
       domain: config.settings.domain,
+      storageSummary: {
+        totalBytes: totalDriveStorageBytes,
+        totalFilesCount: totalDriveFilesCount,
+        storageFootprint: formatStorageFootprint(totalDriveStorageBytes),
+        storageUsagePercent: Number(storageUsagePercent.toFixed(2)),
+        storageCapacityBytes: STORAGE_BAR_CAP_BYTES,
+      },
     });
   } catch (err) {
     log(`Error fetching user files dashboard: ${err.message}`, "error");
@@ -123,6 +191,7 @@ export const uploadFile = async (req, res) => {
         uploader: username,
         encryption: `${config.settings.encryption}`,
         fileSize: displaySize,
+        fileSizeBytes: fileSizeInBytes,
         parentFolder: parentFolder,
         isFolder: false
       };
@@ -140,6 +209,7 @@ export const uploadFile = async (req, res) => {
         uploader: username,
         uploadTime: formattedOutput,
         fileSize: displaySize,
+        fileSizeBytes: fileSizeInBytes,
         encryption: config.settings.encryption,
         parentFolder
       });
@@ -199,6 +269,7 @@ export const webshareUploadFile = async (req, res) => {
         uploader: username,
         encryption: `${config.settings.encryption}`,
         fileSize: displaySize,
+        fileSizeBytes: fileSizeInBytes,
         parentFolder: "root",
         isFolder: false
       });

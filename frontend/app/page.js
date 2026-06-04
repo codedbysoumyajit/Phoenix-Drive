@@ -22,28 +22,13 @@ export default function Home() {
   }, [router]);
 
   return (
-    <div className="container-center" style={{ minHeight: "100vh" }}>
-      <div className="text-center animate-fade-in" style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-        <h1 className="text-gradient animate-pulse-slow" style={{ fontSize: "2.8rem", marginBottom: "8px" }}>
+    <div className="flex items-center justify-center min-h-screen px-6">
+      <div className="text-center flex flex-col items-center animate-fade-in-up">
+        <h1 className="text-4xl font-bold bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent mb-2">
           Phoenix XShare
         </h1>
-        <p style={{ color: "var(--text-secondary)", fontSize: "1.05rem", fontWeight: "300", letterSpacing: "0.05em" }}>
-          ESTABLISHING SECURE GATEWAY
-        </p>
-        <div style={{
-          marginTop: "32px",
-          width: "40px",
-          height: "40px",
-          border: "2px solid rgba(6, 182, 212, 0.1)",
-          borderTopColor: "var(--accent-cyan)",
-          borderRadius: "50%",
-          animation: "spin 0.8s linear infinite"
-        }}></div>
-        <style dangerouslySetInnerHTML={{__html: `
-          @keyframes spin {
-            to { transform: rotate(360deg); }
-          }
-        `}} />
+        <p className="text-slate-400 text-sm tracking-wide">Connecting...</p>
+        <div className="mt-8 w-10 h-10 border-2 border-cyan-500/20 border-t-cyan-400 rounded-full animate-spin-slow" />
       </div>
     </div>
   );
