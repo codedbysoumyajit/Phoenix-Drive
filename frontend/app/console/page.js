@@ -23,7 +23,7 @@ export default function SystemConsole() {
 
   useEffect(() => {
     // 1. Fetch user session and storage data
-    fetch("/api/files")
+    fetch("/api/files", { credentials: "include" })
       .then((res) => {
         if (res.status === 401) {
           router.replace("/login");
@@ -41,7 +41,7 @@ export default function SystemConsole() {
       .catch(() => {});
 
     // 2. Fetch config details
-    fetch("/api/auth/config")
+    fetch("/api/auth/config", { credentials: "include" })
       .then((res) => res.json())
       .then((data) => {
         setLoading(false);

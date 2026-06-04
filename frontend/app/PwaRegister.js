@@ -4,7 +4,7 @@ import { useEffect } from "react";
 
 export default function PwaRegister() {
   useEffect(() => {
-    if (process.env.NODE_ENV !== "production") return;
+    if (process.env.NEXT_PUBLIC_ENABLE_PWA !== "true") return;
 
     if ("serviceWorker" in navigator) {
       // Register our service worker in public/sw.js

@@ -16,7 +16,7 @@ export default function Register() {
   const router = useRouter();
 
   useEffect(() => {
-    fetch("/api/auth/session")
+    fetch("/api/auth/session", { credentials: "include" })
       .then((res) => res.json())
       .then((data) => {
         if (data.loggedIn) {
@@ -25,7 +25,7 @@ export default function Register() {
       })
       .catch(() => {});
 
-    fetch("/api/auth/config")
+    fetch("/api/auth/config", { credentials: "include" })
       .then((res) => res.json())
       .then((data) => {
         setSecretRequired(data.secretRequired);
@@ -72,6 +72,7 @@ export default function Register() {
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(bodyPayload),
       });
 

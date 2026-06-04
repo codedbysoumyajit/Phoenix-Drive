@@ -29,7 +29,7 @@ export default function DownloadPage({ params }) {
   useEffect(() => {
     if (!fileName) return;
 
-    fetch(`/api/files/metadata/${fileName}`)
+    fetch(`/api/files/metadata/${fileName}`, { credentials: "include" })
       .then((res) => {
         if (!res.ok) {
           throw new Error("File not found or metadata missing.");

@@ -170,7 +170,7 @@ function DashboardContent() {
 
   const fetchDashboardData = async () => {
     try {
-      const res = await fetch(`/api/files?folder=${currentFolder}`);
+      const res = await fetch(`/api/files?folder=${currentFolder}`, { credentials: "include" });
       if (res.status === 401) {
         router.replace("/login");
         return;
@@ -217,6 +217,7 @@ function DashboardContent() {
       const res = await fetch("/api/files/folder", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
           folderName: createModal.folderName.trim(),
           parentFolder: currentFolder
@@ -247,6 +248,7 @@ function DashboardContent() {
     try {
       const res = await fetch(`/api/files/delete/${filename}`, {
         method: "POST",
+        credentials: "include",
       });
 
       const data = await res.json();
@@ -270,6 +272,7 @@ function DashboardContent() {
       const res = await fetch(`/api/files/move/${moveModal.item.filename}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
           destinationFolder: moveModal.destination
         })

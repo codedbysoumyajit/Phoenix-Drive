@@ -12,7 +12,6 @@ import config from "../config/config.js";
 // Import Routes
 import authRoutes from "./routes/authRoutes.js";
 import fileRoutes from "./routes/fileRoutes.js";
-import { generateRandomSecret } from "./utils/helpers.js";
 import compression from "compression";
 
 const app = express();
@@ -58,14 +57,15 @@ app.use(
 ); // Make sure this middleware comes before routes that handle file uploads
 app.use(cors());
 
-// Generate secret once when the application starts
-const SESSION_SECRET = await generateRandomSecret(); // Await top-level for module
+// Prefer a stable configured secret so sessions survive restarts in the tunnel/container.
+const SESSION_SECRET =
+  config.settings.sessionSecret || process.env.SESSION_SECRET || "phoenix-xshare-dev-session-secret";
 
 app.use(
   session({
     secret: SESSION_SECRET,
     resave: false,
-    saveUninitialized: true,
+    saveUninitialized: false,
     store: MongoStore.create({
       mongoUrl: config.settings.mongoURI,
       dbName: "phoenix-xshare",
@@ -75,6 +75,7 @@ app.use(
     cookie: {
       maxAge: 14 * 24 * 60 * 60 * 1000, // 14 days in milliseconds
       secure: false, // Set to true in production with HTTPS
+      sameSite: "lax",
     },
   })
 );

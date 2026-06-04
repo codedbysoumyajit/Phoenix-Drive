@@ -13,7 +13,7 @@ export default function Navbar() {
   const [theme, setTheme] = useState("dark");
 
   useEffect(() => {
-    fetch("/api/auth/session")
+    fetch("/api/auth/session", { credentials: "include" })
       .then((res) => res.json())
       .then((data) => {
         if (data.loggedIn) {
@@ -41,7 +41,7 @@ export default function Navbar() {
 
   const handleLogout = async () => {
     try {
-      const res = await fetch("/api/auth/logout", { method: "POST" });
+      const res = await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
       if (res.ok) {
         router.push("/login");
       }

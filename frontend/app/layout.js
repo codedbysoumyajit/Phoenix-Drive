@@ -2,7 +2,7 @@ import "./globals.css";
 import PwaRegister from "./PwaRegister";
 import Navbar from "./Navbar";
 
-const isProduction = process.env.NODE_ENV === "production";
+const isPwaEnabled = process.env.NEXT_PUBLIC_ENABLE_PWA === "true";
 
 export const metadata = {
   title: "Phoenix XShare | Fast & Secure File Sharing",
@@ -10,7 +10,6 @@ export const metadata = {
     "Share files securely with encryption, fast uploads, QR codes, and more.",
   appleMobileWebAppCapable: "yes",
   appleMobileWebAppStatusBarStyle: "black-translucent",
-  ...(isProduction ? { manifest: "/site.webmanifest" } : {}),
 };
 
 export const viewport = {
@@ -52,7 +51,7 @@ export default function RootLayout({ children }) {
         `}} />
       </head>
       <body className="bg-slate-50 dark:bg-[#0c0f17] text-slate-900 dark:text-slate-100 font-sans min-h-screen antialiased transition-colors duration-300 flex flex-col">
-        {isProduction ? <PwaRegister /> : null}
+        {isPwaEnabled ? <PwaRegister /> : null}
         <Navbar />
         {children}
       </body>

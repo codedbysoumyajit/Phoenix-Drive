@@ -53,14 +53,14 @@ export default function ViewPage({ params }) {
   useEffect(() => {
     if (!fileName) return;
 
-    fetch("/api/auth/session")
+    fetch("/api/auth/session", { credentials: "include" })
       .then((res) => res.json())
       .then((data) => {
         setIsLoggedIn(data.loggedIn);
       })
       .catch(() => {});
 
-    fetch(`/api/files/metadata/${fileName}`)
+    fetch(`/api/files/metadata/${fileName}`, { credentials: "include" })
       .then((res) => {
         if (!res.ok) {
           throw new Error("Metadata could not be found.");
@@ -72,7 +72,7 @@ export default function ViewPage({ params }) {
 
         const fileType = getFileType(data.originalName || fileName);
         if (fileType === 'text') {
-          return fetch(`/cdn/${fileName}`)
+          return fetch(`/cdn/${fileName}`, { credentials: "include" })
             .then((res) => res.text())
             .then((text) => setTextContent(text))
             .catch(() => setTextContent("Unable to load text contents."));

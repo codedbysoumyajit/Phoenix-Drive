@@ -37,7 +37,7 @@ function UploadDashboardContent() {
 
   const fetchDashboardData = async () => {
     try {
-      const res = await fetch(`/api/files?folder=${currentFolder}`);
+      const res = await fetch(`/api/files?folder=${currentFolder}`, { credentials: "include" });
       if (res.status === 401) {
         router.replace("/login");
         return;
@@ -107,6 +107,7 @@ function UploadDashboardContent() {
       const res = await fetch("/api/files/upload", {
         method: "POST",
         body: formData,
+        credentials: "include",
       });
 
       setUploadProgress(80);
