@@ -1,12 +1,12 @@
 services:
   app:
     build: .
-    container_name: phoenix_xshare_app
+    container_name: phoenix_drive_app
     restart: always
     ports:
       - "3000:3000"
     environment:
-      - MONGO_URI=mongodb://mongo:27017/phoenix-xshare
+      - MONGO_URI=mongodb://mongo:27017/phoenix-drive
       - DOMAIN=http://localhost:3000
       - PORT=3000
       - ENCRYPTION=true
@@ -19,7 +19,7 @@ services:
 
   mongo:
     image: mongo:6.0
-    container_name: phoenix_xshare_db
+    container_name: phoenix_drive_db
     restart: always
     ports:
       - "27017:27017"

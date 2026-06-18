@@ -5,7 +5,7 @@ import Navbar from "./Navbar";
 const isPwaEnabled = process.env.NEXT_PUBLIC_ENABLE_PWA === "true";
 
 export const metadata = {
-  title: "Phoenix XShare | Fast & Secure File Sharing",
+  title: "Phoenix Drive | Fast & Secure Cloud Storage",
   description:
     "Share files securely with encryption, fast uploads, QR codes, and more.",
   appleMobileWebAppCapable: "yes",

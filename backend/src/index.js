@@ -59,7 +59,7 @@ app.use(cors());
 
 // Prefer a stable configured secret so sessions survive restarts in the tunnel/container.
 const SESSION_SECRET =
-  config.settings.sessionSecret || process.env.SESSION_SECRET || "phoenix-xshare-dev-session-secret";
+  config.settings.sessionSecret || process.env.SESSION_SECRET || "phoenix-drive-dev-session-secret";
 
 app.use(
   session({
@@ -68,7 +68,7 @@ app.use(
     saveUninitialized: false,
     store: MongoStore.create({
       mongoUrl: config.settings.mongoURI,
-      dbName: "phoenix-xshare",
+      dbName: "phoenix-drive",
       collectionName: "sessions",
       ttl: 14 * 24 * 60 * 60, // 14 days in seconds
     }),
@@ -94,5 +94,5 @@ app.use((req, res, next) => {
 
 // --- Server Start ---
 server.listen(config.settings.port, () => {
-  log(`Phoenix XShare API Server is running on port ${config.settings.port}`, "info");
+  log(`Phoenix Drive API Server is running on port ${config.settings.port}`, "info");
 });

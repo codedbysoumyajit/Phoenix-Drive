@@ -142,7 +142,7 @@ export default function DownloadPage({ params }) {
             P
           </div>
           <h1 className="text-xl font-extrabold bg-gradient-to-r from-cyan-600 to-blue-600 dark:from-cyan-400 dark:to-purple-400 bg-clip-text text-transparent">
-            Phoenix XShare
+            Phoenix Drive
           </h1>
         </div>
 

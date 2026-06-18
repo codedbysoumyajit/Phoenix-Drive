@@ -122,7 +122,7 @@ export default function Register() {
             Create Account
           </h2>
           <p className="text-slate-500 dark:text-slate-400 text-sm mt-1.5 font-medium">
-            Join Phoenix XShare today
+            Join Phoenix Drive today
           </p>
         </div>
 
