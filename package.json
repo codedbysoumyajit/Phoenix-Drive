@@ -11,7 +11,7 @@
     "start": "concurrently \"cd backend && PORT=5000 node src/index.js\" \"cd frontend && npm start\""
   },
   "keywords": [],
-  "author": "Pheonix",
+  "author": "Soumyajit",
   "license": "MIT",
   "dependencies": {
     "concurrently": "^8.2.2"
